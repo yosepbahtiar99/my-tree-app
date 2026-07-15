@@ -1,4 +1,4 @@
-const { Person, AuditLog } = require('../models');
+const { Person, AuditLog, Marriage } = require('../models');
 
 const calculateAge = (birthDate, deathDate, isDeceased) => {
   if (!birthDate) return null;
@@ -93,9 +93,7 @@ const deletePerson = async (req, res) => {
 const getTreeData = async (req, res) => {
   try {
     const persons = await Person.findAll();
-    // For React Flow, we'll send flat data and let frontend build the nodes/edges, 
-    // or build a hierarchical structure here if preferred. 
-    // Sending flat data is usually easier for React Flow to process edges.
+    const marriages = await Marriage.findAll();
     
     const nodes = persons.map(p => {
       const pData = p.toJSON();
@@ -103,7 +101,7 @@ const getTreeData = async (req, res) => {
       return pData;
     });
 
-    res.json(nodes);
+    res.json({ persons: nodes, marriages });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching tree data', error: error.message });
   }

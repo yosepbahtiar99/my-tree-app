@@ -11,12 +11,15 @@ import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { api } from '../lib/api';
 import PersonDetailModal from '../components/PersonDetailModal';
+import PersonNode from '../components/PersonNode';
+
+const nodeTypes = { person: PersonNode };
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 180;
-const nodeHeight = 60;
+const nodeWidth = 200;
+const nodeHeight = 150;
 
 const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   dagreGraph.setGraph({ rankdir: direction });
@@ -24,8 +27,8 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   nodes.forEach((node) => {
     const isMarriage = node.id.startsWith('marriage-');
     dagreGraph.setNode(node.id, { 
-      width: isMarriage ? 10 : nodeWidth, 
-      height: isMarriage ? 10 : nodeHeight 
+      width: isMarriage ? 1 : nodeWidth, 
+      height: isMarriage ? 1 : nodeHeight 
     });
   });
 
@@ -37,15 +40,13 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
 
   const newNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    const newNode = {
+    return {
       ...node,
       position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
+        x: nodeWithPosition.x - (node.id.startsWith('marriage-') ? 1 : nodeWidth) / 2,
+        y: nodeWithPosition.y - (node.id.startsWith('marriage-') ? 1 : nodeHeight) / 2,
       },
     };
-
-    return newNode;
   });
 
   return { nodes: newNodes, edges };
@@ -61,109 +62,115 @@ export default function TreePage() {
   const fetchTree = useCallback(async () => {
     try {
       const res = await api.get('/persons/tree');
-      const data = res.data;
+      const { persons, marriages } = res.data;
 
       // Urutkan berdasarkan tanggal lahir (yang tertua di kiri/awal)
-      const sortedData = [...data].sort((a, b) => {
+      const sortedPersons = [...persons].sort((a, b) => {
         if (!a.birthDate) return 1;
         if (!b.birthDate) return -1;
         return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
       });
 
-      setRawPersons(sortedData);
+      setRawPersons(sortedPersons);
 
-      const initialNodes: any[] = sortedData.map((person: any) => ({
-        id: person.id.toString(),
+      const initialNodes: any[] = sortedPersons.map((p: any) => ({
+        id: p.id.toString(),
+        type: 'person',
         position: { x: 0, y: 0 },
-        data: {
-          label: (
-            <div className="flex flex-col items-center justify-center p-2 bg-white rounded-lg border border-border/50 shadow-sm w-[160px]">
-              {person.photoId && (
-                <img 
-                  src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${person.photoId}`} 
-                  alt={person.fullName}
-                  className="w-10 h-10 rounded-full object-cover mb-2 border border-border"
-                />
-              )}
-              <div className="font-medium text-foreground text-center text-sm truncate w-full">{person.fullName}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                Usia: {person.age !== null && person.age !== undefined ? `${person.age} Tahun` : '?'}
-                {person.isDeceased && ' (Almarhum)'}
-              </div>
-            </div>
-          )
-        },
-        style: { width: 160, padding: 0, border: 'none', background: 'transparent' },
+        data: p,
       }));
 
       const initialEdges: any[] = [];
-      const marriagePairs = new Set<string>();
+      const marriageMap = new Map<string, any>(); 
 
-      sortedData.forEach((person: any) => {
-        if (person.fatherId && person.motherId) {
-          const pairKey = `marriage-${person.fatherId}-${person.motherId}`;
-          
-          if (!marriagePairs.has(pairKey)) {
-            marriagePairs.add(pairKey);
-            
-            // Tambahkan Titik Nikah (Dummy Node)
-            initialNodes.push({
-              id: pairKey,
-              position: { x: 0, y: 0 },
-              data: { label: '' },
-              style: { width: 10, height: 10, background: '#475569', border: 'none', borderRadius: '50%', padding: 0, minWidth: 10 },
-            });
-            
-            // Garis Ayah ke Titik Nikah
-            initialEdges.push({
-              id: `e${person.fatherId}-${pairKey}`,
-              source: person.fatherId.toString(),
-              target: pairKey,
-              type: 'straight',
-              animated: false,
-              style: { stroke: '#475569', strokeWidth: 2 }
-            });
-            
-            // Garis Ibu ke Titik Nikah
-            initialEdges.push({
-              id: `e${person.motherId}-${pairKey}`,
-              source: person.motherId.toString(),
-              target: pairKey,
-              type: 'straight',
-              animated: false,
-              style: { stroke: '#475569', strokeWidth: 2 }
-            });
+      const getMarriageKey = (hId: string, wId: string) => `marriage-${[hId, wId].sort().join('-')}`;
+
+      // 1. Tambahkan Pernikahan Resmi dari Database
+      if (marriages && marriages.length > 0) {
+        marriages.forEach((m: any) => {
+          if (m.husbandId && m.wifeId) {
+            const key = getMarriageKey(m.husbandId, m.wifeId);
+            marriageMap.set(key, { husbandId: m.husbandId, wifeId: m.wifeId });
           }
+        });
+      }
 
-          // Garis dari Titik Nikah ke Anak
+      // 2. Tambahkan Pernikahan "Tersirat" dari data Anak (jika belum ada)
+      sortedPersons.forEach((person: any) => {
+        if (person.fatherId && person.motherId) {
+          const key = getMarriageKey(person.fatherId, person.motherId);
+          if (!marriageMap.has(key)) {
+            marriageMap.set(key, { husbandId: person.fatherId, wifeId: person.motherId });
+          }
+        }
+      });
+
+      // 3. Buat Titik Nikah Transparan & Hubungkan Ayah/Ibu ke Titik Nikah
+      marriageMap.forEach((m, key) => {
+        initialNodes.push({
+          id: key,
+          position: { x: 0, y: 0 },
+          data: { label: '' },
+          style: { width: 1, height: 1, background: 'transparent', border: 'none', padding: 0, minWidth: 1 },
+        });
+
+        // Garis Ayah ke Titik Nikah (Bottom -> Top)
+        initialEdges.push({
+          id: `e${m.husbandId}-${key}`,
+          source: m.husbandId.toString(),
+          target: key,
+          sourceHandle: 'bottom',
+          type: 'step',
+          animated: false,
+          style: { stroke: '#94a3b8', strokeWidth: 2 }
+        });
+
+        // Garis Ibu ke Titik Nikah (Bottom -> Top)
+        initialEdges.push({
+          id: `e${m.wifeId}-${key}`,
+          source: m.wifeId.toString(),
+          target: key,
+          sourceHandle: 'bottom',
+          type: 'step',
+          animated: false,
+          style: { stroke: '#94a3b8', strokeWidth: 2 }
+        });
+      });
+
+      // 4. Hubungkan Anak ke Titik Nikah atau ke Orangtua Tunggal
+      sortedPersons.forEach((person: any) => {
+        if (person.fatherId && person.motherId) {
+          const key = getMarriageKey(person.fatherId, person.motherId);
           initialEdges.push({
-            id: `e${pairKey}-${person.id}`,
-            source: pairKey,
+            id: `e${key}-${person.id}`,
+            source: key,
             target: person.id.toString(),
-            type: 'smoothstep',
+            targetHandle: 'top',
+            type: 'step',
             animated: false,
-            style: { stroke: '#475569', strokeWidth: 2 }
+            style: { stroke: '#94a3b8', strokeWidth: 2 }
           });
-          
         } else if (person.fatherId) {
-          // Hanya ada Ayah
           initialEdges.push({
             id: `e${person.fatherId}-${person.id}`,
             source: person.fatherId.toString(),
             target: person.id.toString(),
-            type: 'smoothstep',
+            sourceHandle: 'bottom',
+            targetHandle: 'top',
+            type: 'step',
             animated: false,
-            style: { stroke: '#92400e', strokeWidth: 2 }
+            style: { stroke: '#94a3b8', strokeWidth: 2 }
           });
         } else if (person.motherId) {
-          // Hanya ada Ibu
           initialEdges.push({
             id: `e${person.motherId}-${person.id}`,
             source: person.motherId.toString(),
             target: person.id.toString(),
-            type: 'smoothstep',
+            sourceHandle: 'bottom',
+            targetHandle: 'top',
+            type: 'step',
             animated: false,
-            style: { stroke: '#f59e0b', strokeWidth: 2 }
+            style: { stroke: '#94a3b8', strokeWidth: 2 }
           });
         }
       });
@@ -189,9 +196,11 @@ export default function TreePage() {
   if (loading) return <div className="p-10 text-center">Memuat Silsilah...</div>;
 
   const handleNodeClick = (_: React.MouseEvent, node: any) => {
-    const personData = rawPersons.find(p => p.id.toString() === node.id);
-    if (personData) {
-      setSelectedPerson(personData);
+    if (node.type === 'person') {
+      const personData = rawPersons.find(p => p.id.toString() === node.id);
+      if (personData) {
+        setSelectedPerson(personData);
+      }
     }
   };
 
@@ -200,6 +209,7 @@ export default function TreePage() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}

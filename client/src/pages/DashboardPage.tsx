@@ -2,23 +2,28 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../lib/api';
 import PersonFormModal from '../components/PersonFormModal';
+import MarriageFormModal from '../components/MarriageFormModal';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [persons, setPersons] = useState<any[]>([]);
+  const [marriages, setMarriages] = useState<any[]>([]);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMarriageModalOpen, setIsMarriageModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
   const fetchData = async () => {
     try {
-      const [personsRes, pendingRes] = await Promise.all([
+      const [personsRes, pendingRes, marriagesRes] = await Promise.all([
         api.get('/persons'),
         user?.role === 'SUPER_ADMIN' ? api.get('/auth/pending-users') : Promise.resolve({ data: [] }),
+        api.get('/marriages'),
       ]);
       setPersons(personsRes.data);
       setPendingUsers(pendingRes.data);
+      setMarriages(marriagesRes.data);
     } catch (error) {
       console.error('Failed to fetch data', error);
     } finally {
@@ -46,6 +51,17 @@ export default function DashboardPage() {
         fetchData();
       } catch (error) {
         alert('Gagal menghapus person');
+      }
+    }
+  };
+
+  const handleDeleteMarriage = async (id: string) => {
+    if (confirm('Yakin ingin menghapus relasi pernikahan ini?')) {
+      try {
+        await api.delete(`/marriages/${id}`);
+        fetchData();
+      } catch (error) {
+        alert('Gagal menghapus data pernikahan');
       }
     }
   };
@@ -141,6 +157,44 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Pasangan (Pernikahan)</h2>
+          <button onClick={() => setIsMarriageModalOpen(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
+            + Tambah Pasangan
+          </button>
+        </div>
+        
+        <div className="mt-6 border border-border/50 rounded-lg overflow-hidden overflow-x-auto">
+          <table className="min-w-full divide-y divide-border/50">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Suami</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Istri</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tanggal Menikah</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-border/50">
+              {marriages.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">Belum ada data pernikahan yang diinput secara eksplisit.</td>
+                </tr>
+              ) : marriages.map((m) => (
+                <tr key={m.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Husband ? m.Husband.fullName : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Wife ? m.Wife.fullName : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{m.marriageDate || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-3">
+                    <button onClick={() => handleDeleteMarriage(m.id)} className="text-red-600 hover:text-red-800">Hapus</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       
       <PersonFormModal 
         isOpen={isModalOpen}
@@ -148,6 +202,13 @@ export default function DashboardPage() {
         onSuccess={fetchData}
         persons={persons}
         editData={editData}
+      />
+
+      <MarriageFormModal
+        isOpen={isMarriageModalOpen}
+        onClose={() => setIsMarriageModalOpen(false)}
+        onSuccess={fetchData}
+        persons={persons}
       />
     </div>
   );
