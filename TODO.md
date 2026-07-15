@@ -1,0 +1,30 @@
+# Silsilahku Project TODO
+
+- [x] **Project Initialization**
+  - [x] Buat folder utama `silsilahku`
+  - [x] Setup root `package.json` dengan `concurrently` (monorepo setup)
+- [ ] **Backend (Server) Setup**
+  - [x] Inisialisasi folder `server`
+  - [x] Install dependensi backend (Express, Sequelize, MySQL2, Multer, dll)
+  - [x] Setup konfigurasi koneksi Database MySQL
+  - [x] Buat Model Sequelize: `User`, `Person`, `AuditLog`
+  - [ ] Sinkronisasi Database ke MySQL
+- [x] **Frontend (Client) Setup**
+  - [x] Inisialisasi folder `client` dengan Vite + React + TypeScript
+  - [x] Install dependensi frontend (TailwindCSS, Zustand, React Query, React Router, React Flow, dll)
+  - [x] Setup konfigurasi Tailwind CSS
+- [x] **Fitur Authentication & Akses**
+  - [x] Backend: API Register, Login, Approve User (Super Admin)
+  - [x] Frontend: Halaman Login & Register
+  - [x] Frontend: Halaman Dashboard Admin buat approve editor
+- [x] **Fitur Data Anggota Keluarga (Person)**
+  - [x] Backend: API CRUD Person + Upload Foto (Multer)
+  - [x] Backend: Implementasi Audit Trail log pas data diubah
+  - [x] Frontend: Halaman List Anggota & Form Tambah/Edit Anggota (File picker + Kamera)
+- [x] **Visualisasi Pohon Keluarga**
+  - [x] Backend: API `/tree` untuk merangkai data relasi anak-orangtua
+  - [x] Frontend: Tampilan publik `React Flow`
+  - [x] Frontend: Modal Detail Profil (menampilkan pasangan & info lengkap)
+- [x] **Finishing & Testing**
+  - [x] Uji coba menyeluruh alur tambah data dan visualisasi tree.
+  - [x] Pengecekan responsivitas UI di mobile.
