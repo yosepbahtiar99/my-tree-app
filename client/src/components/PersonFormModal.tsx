@@ -7,9 +7,10 @@ interface PersonFormModalProps {
   onSuccess: () => void;
   persons: any[];
   editData?: any;
+  initialData?: any;
 }
 
-export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, editData }: PersonFormModalProps) {
+export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, editData, initialData }: PersonFormModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: editData?.fullName || '',
@@ -17,8 +18,8 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
     birthDate: editData?.birthDate || '',
     isDeceased: editData?.isDeceased || false,
     deathDate: editData?.deathDate || '',
-    fatherId: editData?.fatherId || '',
-    motherId: editData?.motherId || '',
+    fatherId: editData?.fatherId || initialData?.fatherId || '',
+    motherId: editData?.motherId || initialData?.motherId || '',
   });
   
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -32,15 +33,15 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
         birthDate: editData?.birthDate || '',
         isDeceased: editData?.isDeceased || false,
         deathDate: editData?.deathDate || '',
-        fatherId: editData?.fatherId || '',
-        motherId: editData?.motherId || '',
+        fatherId: editData?.fatherId || initialData?.fatherId || '',
+        motherId: editData?.motherId || initialData?.motherId || '',
       });
       setPhotoFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  }, [isOpen, editData]);
+  }, [isOpen, editData, initialData]);
 
   if (!isOpen) return null;
 

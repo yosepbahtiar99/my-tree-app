@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
 interface MarriageFormModalProps {
@@ -6,13 +6,23 @@ interface MarriageFormModalProps {
   onClose: () => void;
   onSuccess: () => void;
   persons: any[];
+  initialHusbandId?: string;
+  initialWifeId?: string;
 }
 
-export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons }: MarriageFormModalProps) {
+export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons, initialHusbandId, initialWifeId }: MarriageFormModalProps) {
   const [loading, setLoading] = useState(false);
-  const [husbandId, setHusbandId] = useState('');
-  const [wifeId, setWifeId] = useState('');
+  const [husbandId, setHusbandId] = useState(initialHusbandId || '');
+  const [wifeId, setWifeId] = useState(initialWifeId || '');
   const [marriageDate, setMarriageDate] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setHusbandId(initialHusbandId || '');
+      setWifeId(initialWifeId || '');
+      setMarriageDate('');
+    }
+  }, [isOpen, initialHusbandId, initialWifeId]);
 
   if (!isOpen) return null;
 

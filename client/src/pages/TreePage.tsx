@@ -3,6 +3,7 @@ import {
   ReactFlow,
   MiniMap,
   Controls,
+  ControlButton,
   Background,
   useNodesState,
   useEdgesState,
@@ -10,7 +11,10 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { api } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
 import PersonDetailModal from '../components/PersonDetailModal';
+import PersonFormModal from '../components/PersonFormModal';
+import MarriageFormModal from '../components/MarriageFormModal';
 import PersonNode from '../components/PersonNode';
 
 const nodeTypes = { person: PersonNode };
@@ -53,11 +57,40 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
 };
 
 export default function TreePage() {
+  const { user } = useAuthStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [loading, setLoading] = useState(true);
+  
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const [rawPersons, setRawPersons] = useState<any[]>([]);
+
+  // States for Modals
+  const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
+  const [isMarriageModalOpen, setIsMarriageModalOpen] = useState(false);
+  const [personModalInitialData, setPersonModalInitialData] = useState<any>(null);
+  const [personModalEditData, setPersonModalEditData] = useState<any>(null);
+  const [marriageModalHusbandId, setMarriageModalHusbandId] = useState<string>('');
+  const [marriageModalWifeId, setMarriageModalWifeId] = useState<string>('');
+
+  const handleNodeAction = useCallback((action: string, person: any) => {
+    if (action === 'ADD_CHILD') {
+      setPersonModalEditData(null);
+      setPersonModalInitialData({
+        fatherId: person.gender === 'MALE' ? person.id : '',
+        motherId: person.gender === 'FEMALE' ? person.id : '',
+      });
+      setIsPersonModalOpen(true);
+    } else if (action === 'ADD_SPOUSE') {
+      setMarriageModalHusbandId(person.gender === 'MALE' ? person.id : '');
+      setMarriageModalWifeId(person.gender === 'FEMALE' ? person.id : '');
+      setIsMarriageModalOpen(true);
+    } else if (action === 'EDIT_PROFILE') {
+      setPersonModalEditData(person);
+      setPersonModalInitialData(null);
+      setIsPersonModalOpen(true);
+    }
+  }, []);
 
   const fetchTree = useCallback(async () => {
     try {
@@ -77,7 +110,11 @@ export default function TreePage() {
         id: p.id.toString(),
         type: 'person',
         position: { x: 0, y: 0 },
-        data: p,
+        data: {
+          ...p,
+          user, // Lewatkan data user ke node
+          onAction: handleNodeAction,
+        },
       }));
 
       const initialEdges: any[] = [];
@@ -187,7 +224,7 @@ export default function TreePage() {
     } finally {
       setLoading(false);
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, user, handleNodeAction]);
 
   useEffect(() => {
     fetchTree();
@@ -215,7 +252,13 @@ export default function TreePage() {
         onNodeClick={handleNodeClick}
         fitView
       >
-        <Controls />
+        <Controls>
+          <ControlButton onClick={fetchTree} title="Refresh Silsilah">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          </ControlButton>
+        </Controls>
         <MiniMap />
         <Background gap={12} size={1} />
       </ReactFlow>
@@ -224,6 +267,25 @@ export default function TreePage() {
         isOpen={!!selectedPerson} 
         onClose={() => setSelectedPerson(null)} 
         person={selectedPerson} 
+      />
+
+      {/* Modals for Context Menu Actions */}
+      <PersonFormModal 
+        isOpen={isPersonModalOpen}
+        onClose={() => setIsPersonModalOpen(false)}
+        onSuccess={fetchTree}
+        persons={rawPersons}
+        editData={personModalEditData}
+        initialData={personModalInitialData}
+      />
+
+      <MarriageFormModal
+        isOpen={isMarriageModalOpen}
+        onClose={() => setIsMarriageModalOpen(false)}
+        onSuccess={fetchTree}
+        persons={rawPersons}
+        initialHusbandId={marriageModalHusbandId}
+        initialWifeId={marriageModalWifeId}
       />
     </div>
   );
