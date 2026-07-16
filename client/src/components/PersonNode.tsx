@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Handle, Position } from '@xyflow/react';
 // No need to import SERVER_URL
 
-export default function PersonNode({ id, data }: any) {
-  const { setNodes } = useReactFlow();
+export default function PersonNode({ data }: any) {
   const isDeceased = data.isDeceased;
   const genderColor = data.gender === 'MALE' ? 'border-blue-400' : 'border-rose-400';
   const [showMenu, setShowMenu] = useState(false);
@@ -13,42 +12,28 @@ export default function PersonNode({ id, data }: any) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu((prev) => {
-          if (prev) {
-            setNodes((nds) => nds.map(n => n.id === id ? { ...n, zIndex: 0 } : n));
-            return false;
-          }
-          return prev;
-        });
+        setShowMenu(false);
       }
     };
     // Gunakan capture: true agar event tertangkap sebelum diblokir oleh React Flow (panning/dragging)
     document.addEventListener('click', handleClickOutside, { capture: true });
     return () => document.removeEventListener('click', handleClickOutside, { capture: true });
-  }, [id, setNodes]);
+  }, []);
 
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.stopPropagation();
     setShowMenu(false);
-    setNodes((nds) => nds.map(n => n.id === id ? { ...n, zIndex: 0 } : n));
     if (data.onAction) {
       data.onAction(action, data);
     }
   };
   const handleToggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newShowMenu = !showMenu;
-    setShowMenu(newShowMenu);
-    
-    // Elevate the entire React Flow node z-index to break out of stacking context
-    setNodes((nds) => nds.map(node => ({
-      ...node,
-      zIndex: node.id === id ? (newShowMenu ? 1000 : 0) : node.zIndex
-    })));
+    setShowMenu(!showMenu);
   };
 
   return (
-    <div className={`relative bg-white border-t-4 ${genderColor} rounded-md shadow-md min-w-[180px] p-4 flex flex-col items-center justify-center ${showMenu ? '!z-[9999]' : ''}`}>
+    <div className={`relative bg-white border-t-4 ${genderColor} rounded-md shadow-md min-w-[180px] p-4 flex flex-col items-center justify-center ${showMenu ? 'menu-open !z-[9999]' : ''}`}>
       {/* Handles untuk Relasi Pasangan (Kiri & Kanan) - Dibuat Transparan */}
       <Handle type="source" position={Position.Right} id="right" className="!opacity-0 !cursor-default !w-1 !h-1" />
       <Handle type="target" position={Position.Left} id="left" className="!opacity-0 !cursor-default !w-1 !h-1" />

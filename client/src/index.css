@@ -34,3 +34,8 @@
     color: var(--color-foreground);
   }
 }
+
+/* React Flow custom fixes */
+.react-flow__node:has(.menu-open) {
+  z-index: 1000 !important;
+}

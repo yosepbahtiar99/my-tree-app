@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -37,7 +37,10 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   });
 
   edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
+    // Beri bobot besar (100) untuk garis yang menuju ke titik nikah
+    // agar Dagre menempatkan suami, istri, dan titik nikah sedekat mungkin (bersebelahan)
+    const isMarriageEdge = edge.target.startsWith('marriage-');
+    dagreGraph.setEdge(edge.source, edge.target, { weight: isMarriageEdge ? 100 : 1 });
   });
 
   dagre.layout(dagreGraph);
@@ -64,6 +67,7 @@ export default function TreePage() {
   
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const [rawPersons, setRawPersons] = useState<any[]>([]);
+  const rawMarriagesRef = useRef<any[]>([]);
 
   // States for Modals
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
@@ -75,10 +79,19 @@ export default function TreePage() {
 
   const handleNodeAction = useCallback((action: string, person: any) => {
     if (action === 'ADD_CHILD') {
+      // Cari apakah person ini punya pasangan (marriage)
+      let spouseId = '';
+      const personMarriages = rawMarriagesRef.current.filter(m => m.husbandId === person.id || m.wifeId === person.id);
+      
+      // Jika hanya punya 1 pasangan, otomatis pilih pasangan tersebut sebagai orang tua
+      if (personMarriages.length === 1) {
+        spouseId = personMarriages[0].husbandId === person.id ? personMarriages[0].wifeId : personMarriages[0].husbandId;
+      }
+
       setPersonModalEditData(null);
       setPersonModalInitialData({
-        fatherId: person.gender === 'MALE' ? person.id : '',
-        motherId: person.gender === 'FEMALE' ? person.id : '',
+        fatherId: person.gender === 'MALE' ? person.id : (spouseId && person.gender === 'FEMALE' ? spouseId : ''),
+        motherId: person.gender === 'FEMALE' ? person.id : (spouseId && person.gender === 'MALE' ? spouseId : ''),
       });
       setIsPersonModalOpen(true);
     } else if (action === 'ADD_SPOUSE') {
@@ -105,6 +118,7 @@ export default function TreePage() {
       });
 
       setRawPersons(sortedPersons);
+      rawMarriagesRef.current = marriages || [];
 
       const initialNodes: any[] = sortedPersons.map((p: any) => ({
         id: p.id.toString(),
