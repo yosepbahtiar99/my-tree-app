@@ -16,8 +16,17 @@ import PersonDetailModal from '../components/PersonDetailModal';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
 import PersonNode from '../components/PersonNode';
+import { Handle, Position } from '@xyflow/react';
 
-const nodeTypes = { person: PersonNode };
+const MarriageNode = () => (
+  <div style={{ width: 4, height: 4, background: '#333', borderRadius: '50%' }}>
+    <Handle type="target" position={Position.Left} id="left-target" style={{ opacity: 0 }} />
+    <Handle type="target" position={Position.Right} id="right-target" style={{ opacity: 0 }} />
+    <Handle type="source" position={Position.Bottom} id="bottom-source" style={{ opacity: 0 }} />
+  </div>
+);
+
+const nodeTypes = { person: PersonNode, marriage: MarriageNode };
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -40,23 +49,53 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     // Beri bobot besar (100) untuk garis yang menuju ke titik nikah
     // agar Dagre menempatkan suami, istri, dan titik nikah sedekat mungkin (bersebelahan)
     const isMarriageEdge = edge.target.startsWith('marriage-');
-    dagreGraph.setEdge(edge.source, edge.target, { weight: isMarriageEdge ? 100 : 1 });
+    dagreGraph.setEdge(edge.source, edge.target, { 
+      weight: isMarriageEdge ? 100 : 1,
+      minlen: isMarriageEdge ? 0 : 1
+    });
   });
 
   dagre.layout(dagreGraph);
 
   const newNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+    let nx = dagreGraph.node(node.id).x;
+    let ny = dagreGraph.node(node.id).y;
+
+    if (node.id.startsWith('marriage-')) {
+      const parents = edges.filter(e => e.target === node.id).map(e => dagreGraph.node(e.source));
+      if (parents.length === 2) {
+        nx = (parents[0].x + parents[1].x) / 2;
+        ny = (parents[0].y + parents[1].y) / 2;
+      }
+    }
+
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - (node.id.startsWith('marriage-') ? 1 : nodeWidth) / 2,
-        y: nodeWithPosition.y - (node.id.startsWith('marriage-') ? 1 : nodeHeight) / 2,
+        x: nx - (node.id.startsWith('marriage-') ? 1 : nodeWidth) / 2,
+        y: ny - (node.id.startsWith('marriage-') ? 1 : nodeHeight) / 2,
       },
     };
   });
 
-  return { nodes: newNodes, edges };
+  const newEdges = edges.map((edge) => {
+    if (edge.target.startsWith('marriage-')) {
+      const sourceNode = dagreGraph.node(edge.source);
+      const targetNode = dagreGraph.node(edge.target);
+      if (sourceNode && targetNode) {
+        const isLeft = sourceNode.x < targetNode.x;
+        return {
+          ...edge,
+          sourceHandle: isLeft ? 'right-source' : 'left-source',
+          targetHandle: isLeft ? 'left-target' : 'right-target',
+          type: 'straight'
+        };
+      }
+    }
+    return edge;
+  });
+
+  return { nodes: newNodes, edges: newEdges };
 };
 
 export default function TreePage() {
@@ -74,6 +113,7 @@ export default function TreePage() {
   const [isMarriageModalOpen, setIsMarriageModalOpen] = useState(false);
   const [personModalInitialData, setPersonModalInitialData] = useState<any>(null);
   const [personModalEditData, setPersonModalEditData] = useState<any>(null);
+  const [personModalAddingParentForId, setPersonModalAddingParentForId] = useState<string | undefined>(undefined);
   const [marriageModalHusbandId, setMarriageModalHusbandId] = useState<string>('');
   const [marriageModalWifeId, setMarriageModalWifeId] = useState<string>('');
 
@@ -88,17 +128,24 @@ export default function TreePage() {
         spouseId = personMarriages[0].husbandId === person.id ? personMarriages[0].wifeId : personMarriages[0].husbandId;
       }
 
+      setPersonModalAddingParentForId(undefined);
       setPersonModalEditData(null);
       setPersonModalInitialData({
         fatherId: person.gender === 'MALE' ? person.id : (spouseId && person.gender === 'FEMALE' ? spouseId : ''),
         motherId: person.gender === 'FEMALE' ? person.id : (spouseId && person.gender === 'MALE' ? spouseId : ''),
       });
       setIsPersonModalOpen(true);
+    } else if (action === 'ADD_PARENT') {
+      setPersonModalAddingParentForId(person.id);
+      setPersonModalEditData(null);
+      setPersonModalInitialData(null);
+      setIsPersonModalOpen(true);
     } else if (action === 'ADD_SPOUSE') {
       setMarriageModalHusbandId(person.gender === 'MALE' ? person.id : '');
       setMarriageModalWifeId(person.gender === 'FEMALE' ? person.id : '');
       setIsMarriageModalOpen(true);
     } else if (action === 'EDIT_PROFILE') {
+      setPersonModalAddingParentForId(undefined);
       setPersonModalEditData(person);
       setPersonModalInitialData(null);
       setIsPersonModalOpen(true);
@@ -160,29 +207,27 @@ export default function TreePage() {
       marriageMap.forEach((m, key) => {
         initialNodes.push({
           id: key,
+          type: 'marriage',
           position: { x: 0, y: 0 },
           data: { label: '' },
-          style: { width: 1, height: 1, background: 'transparent', border: 'none', padding: 0, minWidth: 1 },
         });
 
-        // Garis Ayah ke Titik Nikah (Bottom -> Top)
+        // Garis Ayah ke Titik Nikah
         initialEdges.push({
           id: `e${m.husbandId}-${key}`,
           source: m.husbandId.toString(),
           target: key,
-          sourceHandle: 'bottom',
-          type: 'step',
+          type: 'straight',
           animated: false,
           style: { stroke: '#94a3b8', strokeWidth: 2 }
         });
 
-        // Garis Ibu ke Titik Nikah (Bottom -> Top)
+        // Garis Ibu ke Titik Nikah
         initialEdges.push({
           id: `e${m.wifeId}-${key}`,
           source: m.wifeId.toString(),
           target: key,
-          sourceHandle: 'bottom',
-          type: 'step',
+          type: 'straight',
           animated: false,
           style: { stroke: '#94a3b8', strokeWidth: 2 }
         });
@@ -196,6 +241,7 @@ export default function TreePage() {
             id: `e${key}-${person.id}`,
             source: key,
             target: person.id.toString(),
+            sourceHandle: 'bottom-source',
             targetHandle: 'top',
             type: 'step',
             animated: false,
@@ -291,6 +337,7 @@ export default function TreePage() {
         persons={rawPersons}
         editData={personModalEditData}
         initialData={personModalInitialData}
+        addingParentForId={personModalAddingParentForId}
       />
 
       <MarriageFormModal

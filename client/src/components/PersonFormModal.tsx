@@ -8,9 +8,10 @@ interface PersonFormModalProps {
   persons: any[];
   editData?: any;
   initialData?: any;
+  addingParentForId?: string;
 }
 
-export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, editData, initialData }: PersonFormModalProps) {
+export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, editData, initialData, addingParentForId }: PersonFormModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: editData?.fullName || '',
@@ -84,7 +85,9 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
         motherId: formData.motherId ? formData.motherId : null,
       };
 
-      if (editData) {
+      if (addingParentForId) {
+        await api.post(`/persons/${addingParentForId}/add-parent`, payload);
+      } else if (editData) {
         await api.put(`/persons/${editData.id}`, payload);
       } else {
         await api.post('/persons', payload);
@@ -100,17 +103,22 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
     }
   };
 
+  const males = persons.filter(p => p.gender === 'MALE' && p.id !== editData?.id);
+  const females = persons.filter(p => p.gender === 'FEMALE' && p.id !== editData?.id);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-border/50 flex justify-between items-center">
-          <h2 className="text-2xl font-serif font-bold text-foreground">
-            {editData ? 'Edit Anggota Keluarga' : 'Tambah Anggota Keluarga'}
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/50 flex justify-between items-center bg-muted/30">
+          <h2 className="text-xl font-serif font-bold text-foreground">
+            {addingParentForId ? 'Tambah Orang Tua' : (editData ? 'Edit Data Anggota' : 'Tambah Anggota Keluarga')}
           </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            ✕
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Nama Lengkap *</label>
@@ -138,24 +146,37 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
               </div>
             )}
             
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Ayah (Pilih dari daftar)</label>
-              <select name="fatherId" value={formData.fatherId} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
-                <option value="">- Tidak Diketahui -</option>
-                {persons.filter(p => p.gender === 'MALE' && p.id !== editData?.id).map(p => (
-                  <option key={p.id} value={p.id}>{p.fullName}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Ibu (Pilih dari daftar)</label>
-              <select name="motherId" value={formData.motherId} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
-                <option value="">- Tidak Diketahui -</option>
-                {persons.filter(p => p.gender === 'FEMALE' && p.id !== editData?.id).map(p => (
-                  <option key={p.id} value={p.id}>{p.fullName}</option>
-                ))}
-              </select>
-            </div>
+            {!addingParentForId && (
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Ayah</label>
+                  <select 
+                    value={formData.fatherId} 
+                    onChange={(e) => setFormData({...formData, fatherId: e.target.value})}
+                    className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">-- Tidak Diketahui --</option>
+                    {males.map(p => (
+                      <option key={p.id} value={p.id}>{p.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Ibu</label>
+                  <select 
+                    value={formData.motherId} 
+                    onChange={(e) => setFormData({...formData, motherId: e.target.value})}
+                    className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">-- Tidak Diketahui --</option>
+                    {females.map(p => (
+                      <option key={p.id} value={p.id}>{p.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-1">Foto Wajah (Ambil Kamera / Pilih File)</label>

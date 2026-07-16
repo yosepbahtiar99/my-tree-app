@@ -114,4 +114,56 @@ const uploadPhoto = (req, res) => {
   res.json({ photoId: req.file.filename });
 };
 
-module.exports = { getAllPersons, createPerson, updatePerson, deletePerson, getTreeData, uploadPhoto };
+const addParent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const child = await Person.findByPk(id);
+    if (!child) return res.status(404).json({ message: 'Anak tidak ditemukan' });
+
+    // 1. Buat data orang tua baru
+    const parent = await Person.create(req.body);
+
+    let existingSpouseId = null;
+    let husbandId = null;
+    let wifeId = null;
+
+    // 2. Update relasi anak
+    if (parent.gender === 'MALE') {
+      existingSpouseId = child.motherId;
+      child.fatherId = parent.id;
+      husbandId = parent.id;
+      wifeId = existingSpouseId;
+    } else {
+      existingSpouseId = child.fatherId;
+      child.motherId = parent.id;
+      husbandId = existingSpouseId;
+      wifeId = parent.id;
+    }
+    await child.save();
+
+    // 3. Jika anak sudah punya orang tua lawan jenis, buatkan data pernikahan
+    if (husbandId && wifeId) {
+      const existingMarriage = await Marriage.findOne({
+        where: { husbandId, wifeId }
+      });
+      
+      if (!existingMarriage) {
+        await Marriage.create({ husbandId, wifeId });
+      }
+    }
+
+    // Log Activity
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'CREATE',
+      targetPersonId: parent.id,
+      details: { message: `Menambahkan orang tua (${parent.gender === 'MALE' ? 'Ayah' : 'Ibu'}) untuk ${child.fullName}: ${parent.fullName}` }
+    });
+
+    res.status(201).json({ message: 'Orang tua berhasil ditambahkan', parent });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding parent', error: error.message });
+  }
+};
+
+module.exports = { getAllPersons, createPerson, updatePerson, deletePerson, getTreeData, uploadPhoto, addParent };

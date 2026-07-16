@@ -35,11 +35,12 @@ export default function PersonNode({ data }: any) {
   return (
     <div className={`relative bg-white border-t-4 ${genderColor} rounded-md shadow-md min-w-[180px] p-4 flex flex-col items-center justify-center ${showMenu ? 'menu-open !z-[9999]' : ''}`}>
       {/* Handles untuk Relasi Pasangan (Kiri & Kanan) - Dibuat Transparan */}
-      <Handle type="source" position={Position.Right} id="right" className="!opacity-0 !cursor-default !w-1 !h-1" />
-      <Handle type="target" position={Position.Left} id="left" className="!opacity-0 !cursor-default !w-1 !h-1" />
+      <Handle type="source" position={Position.Right} id="right-source" className="!opacity-0 !cursor-default !w-1 !h-1" />
+      <Handle type="source" position={Position.Left} id="left-source" className="!opacity-0 !cursor-default !w-1 !h-1" />
       
-      {/* Handles untuk Relasi Anak-Orangtua (Atas & Bawah) - Dibuat Transparan */}
+      {/* Target dari atas (Child) */}
       <Handle type="target" position={Position.Top} id="top" className="!opacity-0 !cursor-default !w-1 !h-1" />
+      {/* Source ke bawah (Parent tunggal) */}
       <Handle type="source" position={Position.Bottom} id="bottom" className="!opacity-0 !cursor-default !w-1 !h-1" />
       
       {/* Indikator Meninggal */}
@@ -90,6 +91,12 @@ export default function PersonNode({ data }: any) {
 
           {showMenu && (
             <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl border border-slate-100 py-1 w-40 z-[99999] overflow-hidden">
+              <button 
+                onClick={(e) => handleAction(e, 'ADD_PARENT')}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors flex items-center gap-2"
+              >
+                <span>👴</span> Tambah Orang Tua
+              </button>
               <button 
                 onClick={(e) => handleAction(e, 'ADD_CHILD')}
                 className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
