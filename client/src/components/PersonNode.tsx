@@ -32,8 +32,13 @@ export default function PersonNode({ data }: any) {
     setShowMenu(!showMenu);
   };
 
+  const isHighlighted = data.isHighlighted;
+  const highlightClass = isHighlighted 
+    ? 'ring-4 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.8)] scale-105 transition-all duration-300' 
+    : 'transition-all duration-300';
+
   return (
-    <div className={`relative bg-white border-t-4 ${genderColor} rounded-md shadow-md min-w-[180px] p-4 flex flex-col items-center justify-center ${showMenu ? 'menu-open !z-[9999]' : ''}`}>
+    <div className={`relative bg-white border-t-4 ${genderColor} rounded-md shadow-md min-w-[180px] p-4 flex flex-col items-center justify-center ${showMenu ? 'menu-open !z-[9999]' : ''} ${highlightClass}`}>
       {/* Handles untuk Relasi Pasangan (Kiri & Kanan) - Dibuat Transparan */}
       <Handle type="source" position={Position.Right} id="right-source" className="!opacity-0 !cursor-default !w-1 !h-1" />
       <Handle type="source" position={Position.Left} id="left-source" className="!opacity-0 !cursor-default !w-1 !h-1" />

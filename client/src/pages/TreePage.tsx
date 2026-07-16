@@ -16,6 +16,7 @@ import PersonDetailModal from '../components/PersonDetailModal';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
 import PersonNode from '../components/PersonNode';
+import SearchBar from '../components/SearchBar';
 import { Handle, Position } from '@xyflow/react';
 
 const MarriageNode = () => (
@@ -116,6 +117,27 @@ export default function TreePage() {
   const [personModalAddingParentForId, setPersonModalAddingParentForId] = useState<string | undefined>(undefined);
   const [marriageModalHusbandId, setMarriageModalHusbandId] = useState<string>('');
   const [marriageModalWifeId, setMarriageModalWifeId] = useState<string>('');
+  
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNodes((nds) => 
+      nds.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          isHighlighted: node.id === highlightedNodeId
+        }
+      }))
+    );
+  }, [highlightedNodeId, setNodes]);
+
+  const handleHighlight = useCallback((id: string) => {
+    setHighlightedNodeId(id);
+    setTimeout(() => {
+      setHighlightedNodeId(null);
+    }, 3000);
+  }, []);
 
   const handleNodeAction = useCallback((action: string, person: any) => {
     if (action === 'ADD_CHILD') {
@@ -321,6 +343,7 @@ export default function TreePage() {
         </Controls>
         <MiniMap />
         <Background gap={12} size={1} />
+        <SearchBar persons={rawPersons} onHighlight={handleHighlight} />
       </ReactFlow>
       
       <PersonDetailModal 
