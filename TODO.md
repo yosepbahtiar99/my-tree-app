@@ -28,3 +28,7 @@
 - [x] **Finishing & Testing**
   - [x] Uji coba menyeluruh alur tambah data dan visualisasi tree.
   - [x] Pengecekan responsivitas UI di mobile.
+
+- [ ] **Future Optimizations (Skala Ribuan Node)**
+  - [ ] Implementasi *Lazy Loading / Expandable Nodes* (Klik tombol untuk merender cabang keturunan selanjutnya agar menghemat memori).
+  - [ ] Menggunakan *Web Worker* untuk memindahkan proses algoritma *Dagre Layout* agar tidak menahan antarmuka (mencegah UI *freeze*).
