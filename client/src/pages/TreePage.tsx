@@ -15,7 +15,7 @@ import { useAuthStore } from '../store/authStore';
 import PersonDetailModal from '../components/PersonDetailModal';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
-import PersonNode from '../components/PersonNode';
+import PersonNodeV2 from '../components/PersonNodeV2';
 import SearchBar from '../components/SearchBar';
 import { Handle, Position } from '@xyflow/react';
 
@@ -27,13 +27,13 @@ const MarriageNode = () => (
   </div>
 );
 
-const nodeTypes = { person: PersonNode, marriage: MarriageNode };
+const nodeTypes = { person: PersonNodeV2, marriage: MarriageNode };
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 200;
-const nodeHeight = 150;
+const nodeWidth = 240;
+const nodeHeight = 64;
 
 const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   dagreGraph.setGraph({ rankdir: direction });
