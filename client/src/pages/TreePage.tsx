@@ -29,13 +29,13 @@ const MarriageNode = () => (
 
 const nodeTypes = { person: PersonNodeV2, marriage: MarriageNode };
 
-const dagreGraph = new dagre.graphlib.Graph();
+const dagreGraph = new dagre.graphlib.Graph({ compound: true });
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 240;
 const nodeHeight = 64;
 
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
+const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string, any>, direction = 'TB') => {
   dagreGraph.setGraph({ rankdir: direction });
 
   nodes.forEach((node) => {
@@ -47,13 +47,60 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   });
 
   edges.forEach((edge) => {
-    // Beri bobot besar (100) untuk garis yang menuju ke titik nikah
+    // Beri bobot sangat besar (10000) untuk garis yang menuju ke titik nikah
     // agar Dagre menempatkan suami, istri, dan titik nikah sedekat mungkin (bersebelahan)
     const isMarriageEdge = edge.target.startsWith('marriage-');
     dagreGraph.setEdge(edge.source, edge.target, { 
-      weight: isMarriageEdge ? 100 : 1,
+      weight: isMarriageEdge ? 10000 : 1,
       minlen: isMarriageEdge ? 0 : 1
     });
+  });
+
+  // CLUSTERING: Kelompokkan Pasangan ke dalam Compound Graph
+  let clusterCounter = 0;
+  const spouseClusters = new Map<string, string>(); // nodeId -> clusterId
+  const adjList = new Map<string, string[]>();
+
+  marriageMap.forEach((m) => {
+    const h = m.husbandId.toString();
+    const w = m.wifeId.toString();
+    if (!adjList.has(h)) adjList.set(h, []);
+    if (!adjList.has(w)) adjList.set(w, []);
+    adjList.get(h)!.push(w);
+    adjList.get(w)!.push(h);
+  });
+
+  const visitedNodes = new Set<string>();
+  adjList.forEach((_, node) => {
+    if (!visitedNodes.has(node)) {
+      const clusterId = `cluster-${clusterCounter++}`;
+      dagreGraph.setNode(clusterId, {}); // Buat node grup (kotak transparan)
+      
+      const queue = [node];
+      visitedNodes.add(node);
+      
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        spouseClusters.set(curr, clusterId);
+        dagreGraph.setParent(curr, clusterId); // Kurung orang ini ke dalam grup
+        
+        const neighbors = adjList.get(curr) || [];
+        neighbors.forEach(n => {
+          if (!visitedNodes.has(n)) {
+            visitedNodes.add(n);
+            queue.push(n);
+          }
+        });
+      }
+    }
+  });
+
+  // Kurung juga titik nikah (marriage dot) ke dalam grup yang sama
+  marriageMap.forEach((m, key) => {
+    const clusterId = spouseClusters.get(m.husbandId.toString());
+    if (clusterId) {
+      dagreGraph.setParent(key, clusterId);
+    }
   });
 
   dagre.layout(dagreGraph);
@@ -186,26 +233,10 @@ export default function TreePage() {
         return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
       });
 
-      setRawPersons(sortedPersons);
-      rawMarriagesRef.current = marriages || [];
-
-      const initialNodes: any[] = sortedPersons.map((p: any) => ({
-        id: p.id.toString(),
-        type: 'person',
-        position: { x: 0, y: 0 },
-        data: {
-          ...p,
-          user, // Lewatkan data user ke node
-          onAction: handleNodeAction,
-        },
-      }));
-
-      const initialEdges: any[] = [];
+      // Kumpulkan data pernikahan resmi dan tersirat
       const marriageMap = new Map<string, any>(); 
-
       const getMarriageKey = (hId: string, wId: string) => `marriage-${[hId, wId].sort().join('-')}`;
 
-      // 1. Tambahkan Pernikahan Resmi dari Database
       if (marriages && marriages.length > 0) {
         marriages.forEach((m: any) => {
           if (m.husbandId && m.wifeId) {
@@ -215,7 +246,6 @@ export default function TreePage() {
         });
       }
 
-      // 2. Tambahkan Pernikahan "Tersirat" dari data Anak (jika belum ada)
       sortedPersons.forEach((person: any) => {
         if (person.fatherId && person.motherId) {
           const key = getMarriageKey(person.fatherId, person.motherId);
@@ -224,6 +254,49 @@ export default function TreePage() {
           }
         }
       });
+
+      // OPSI 1: Spouse Grouping (Kelompokkan Pasangan Berurutan)
+      const groupedPersons: any[] = [];
+      const visited = new Set();
+      
+      sortedPersons.forEach(p => {
+        if (visited.has(p.id)) return;
+        groupedPersons.push(p);
+        visited.add(p.id);
+
+        // Cari semua pasangan dari orang ini via marriageMap
+        const spouseIds: string[] = [];
+        marriageMap.forEach(m => {
+          if (m.husbandId === p.id) spouseIds.push(m.wifeId);
+          if (m.wifeId === p.id) spouseIds.push(m.husbandId);
+        });
+          
+        spouseIds.forEach((sId: string) => {
+          if (!visited.has(sId)) {
+            const spouse = sortedPersons.find(sp => sp.id === sId);
+            if (spouse) {
+              groupedPersons.push(spouse);
+              visited.add(sId);
+            }
+          }
+        });
+      });
+
+      setRawPersons(groupedPersons);
+      rawMarriagesRef.current = marriages || [];
+
+      const initialNodes: any[] = groupedPersons.map((p: any) => ({
+        id: p.id.toString(),
+        type: 'person',
+        position: { x: 0, y: 0 },
+        data: {
+          ...p,
+          user,
+          onAction: handleNodeAction,
+        },
+      }));
+
+      const initialEdges: any[] = [];
 
       // 3. Buat Titik Nikah Transparan & Hubungkan Ayah/Ibu ke Titik Nikah
       marriageMap.forEach((m, key) => {
@@ -241,7 +314,7 @@ export default function TreePage() {
           target: key,
           type: 'straight',
           animated: false,
-          style: { stroke: '#94a3b8', strokeWidth: 2 }
+          style: { stroke: '#f43f5e', strokeWidth: 2, strokeDasharray: '5,5' } // Rose-500, dashed
         });
 
         // Garis Ibu ke Titik Nikah
@@ -251,7 +324,7 @@ export default function TreePage() {
           target: key,
           type: 'straight',
           animated: false,
-          style: { stroke: '#94a3b8', strokeWidth: 2 }
+          style: { stroke: '#f43f5e', strokeWidth: 2, strokeDasharray: '5,5' } // Rose-500, dashed
         });
       });
 
@@ -296,7 +369,8 @@ export default function TreePage() {
 
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         initialNodes,
-        initialEdges
+        initialEdges,
+        marriageMap
       );
 
       setNodes(layoutedNodes);
