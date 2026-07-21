@@ -7,9 +7,14 @@ import {
   // Background,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  getNodesBounds,
+  getViewportForBounds,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import PersonDetailModal from '../components/PersonDetailModal';
@@ -249,6 +254,58 @@ export default function TreePage() {
   
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [focusedPersonId, setFocusedPersonId] = useState<string | null>(null);
+  
+  const [isExporting, setIsExporting] = useState(false);
+  const { getNodes } = useReactFlow();
+
+  const downloadTree = async (format: 'png' | 'pdf') => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const currentNodes = getNodes();
+      if (currentNodes.length === 0) return;
+
+      const nodesBounds = getNodesBounds(currentNodes);
+      const width = nodesBounds.width + 200;
+      const height = nodesBounds.height + 200;
+      const viewport = getViewportForBounds(nodesBounds, width, height, 0.5, 2, 0);
+
+      const element = document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!element) return;
+
+      const dataUrl = await toPng(element, {
+        backgroundColor: '#ffffff',
+        width: width,
+        height: height,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+        },
+      });
+
+      if (format === 'png') {
+        const a = document.createElement('a');
+        a.setAttribute('download', 'silsilah-keluarga.png');
+        a.setAttribute('href', dataUrl);
+        a.click();
+      } else {
+        const orientation = width > height ? 'l' : 'p';
+        const pdf = new jsPDF({
+          orientation,
+          unit: 'px',
+          format: [width, height]
+        });
+        pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+        pdf.save('silsilah-keluarga.pdf');
+      }
+    } catch (err) {
+      console.error('Failed to export tree', err);
+      alert('Gagal mengekspor silsilah. Coba lagi.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     setNodes((nds) => 
@@ -528,6 +585,22 @@ export default function TreePage() {
         fitView
       >
         <Controls>
+          <ControlButton onClick={() => downloadTree('png')} title="Download PNG" style={{ opacity: isExporting ? 0.5 : 1 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </ControlButton>
+          <ControlButton onClick={() => downloadTree('pdf')} title="Download PDF" style={{ opacity: isExporting ? 0.5 : 1 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </ControlButton>
           {focusedPersonId && (
             <ControlButton onClick={() => setFocusedPersonId(null)} title="Batal Fokus" style={{ color: '#ef4444' }}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>

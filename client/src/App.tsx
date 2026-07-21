@@ -4,6 +4,7 @@ import TreePage from './pages/TreePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import { ReactFlowProvider } from '@xyflow/react';
 
 import { useAuthStore } from './store/authStore';
 
@@ -64,7 +65,7 @@ function App() {
         <Navbar />
         <main className="flex-1 w-full relative">
           <Routes>
-            <Route path="/" element={<TreePage />} />
+            <Route path="/" element={<ReactFlowProvider><TreePage /></ReactFlowProvider>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
