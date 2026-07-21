@@ -4,7 +4,7 @@ import {
   MiniMap,
   Controls,
   ControlButton,
-  Background,
+  // Background,
   useNodesState,
   useEdgesState,
 } from '@xyflow/react';
@@ -53,7 +53,7 @@ const nodeHeight = 64;
 const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string, any>, direction = 'TB') => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction });
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 120, ranksep: 120 });
 
   const marriageDotWidth = 60;
 
@@ -162,10 +162,7 @@ const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string
       elementToCluster.set(item.id, clusterId);
     });
 
-    const hasMarriage = seq.length > 1;
-    const padding = hasMarriage ? 400 : 0; // Spouse Separation Gap
-
-    dagreGraph.setNode(clusterId, { width: clusterWidth + padding, height: nodeHeight });
+    dagreGraph.setNode(clusterId, { width: clusterWidth, height: nodeHeight });
   });
 
   // 5. Daftarkan Edges (Anak) antar Cluster ke Dagre
@@ -190,11 +187,7 @@ const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string
     const cNode = dagreGraph.node(clusterId);
     if (!cNode) return;
     
-    const hasMarriage = seq.length > 1;
-    const padding = hasMarriage ? 400 : 0;
-    const innerWidth = cNode.width - padding;
-
-    let currentX = cNode.x - innerWidth / 2;
+    let currentX = cNode.x - cNode.width / 2;
     const currentY = cNode.y;
     
     seq.forEach(item => {
@@ -530,6 +523,8 @@ export default function TreePage() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        nodesDraggable={false}
+        elementsSelectable={false}
         fitView
       >
         <Controls>
@@ -547,7 +542,7 @@ export default function TreePage() {
           </ControlButton>
         </Controls>
         <MiniMap />
-        <Background gap={12} size={1} />
+        {/* <Background gap={12} size={1} /> */}
         <SearchBar persons={rawPersons} onHighlight={handleHighlight} />
       </ReactFlow>
       
