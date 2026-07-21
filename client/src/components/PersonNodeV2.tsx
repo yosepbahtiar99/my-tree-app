@@ -117,6 +117,13 @@ export default function PersonNodeV2({ data }: any) {
               >
                 <span>✏️</span> Edit Profil
               </button>
+              <div className="h-px bg-slate-100 my-1"></div>
+              <button 
+                onClick={(e) => handleAction(e, 'FOCUS_FAMILY')}
+                className="w-full text-left px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+              >
+                <span>🎯</span> Fokus Keluarga
+              </button>
             </div>
           )}
         </div>

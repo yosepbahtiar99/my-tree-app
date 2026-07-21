@@ -32,3 +32,4 @@
 - [ ] **Future Optimizations (Skala Ribuan Node)**
   - [ ] Implementasi *Lazy Loading / Expandable Nodes* (Klik tombol untuk merender cabang keturunan selanjutnya agar menghemat memori).
   - [ ] Menggunakan *Web Worker* untuk memindahkan proses algoritma *Dagre Layout* agar tidak menahan antarmuka (mencegah UI *freeze*).
+  - [ ] Halaman Profil Ekstra dengan **Timeline Kehidupan** (menampilkan riwayat kelahiran, pernikahan, anak, secara kronologis).

@@ -255,6 +255,7 @@ export default function TreePage() {
   const [marriageModalWifeId, setMarriageModalWifeId] = useState<string>('');
   
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [focusedPersonId, setFocusedPersonId] = useState<string | null>(null);
 
   useEffect(() => {
     setNodes((nds) => 
@@ -307,13 +308,46 @@ export default function TreePage() {
       setPersonModalEditData(person);
       setPersonModalInitialData(null);
       setIsPersonModalOpen(true);
+    } else if (action === 'FOCUS_FAMILY') {
+      setFocusedPersonId(person.id);
     }
   }, []);
 
   const fetchTree = useCallback(async () => {
     try {
       const res = await api.get('/persons/tree');
-      const { persons, marriages } = res.data;
+      let { persons, marriages } = res.data;
+
+      if (focusedPersonId) {
+        const visibleIds = new Set<string>();
+        const q = [focusedPersonId];
+        visibleIds.add(focusedPersonId);
+
+        while (q.length > 0) {
+          const curr = q.shift()!;
+          
+          marriages.forEach((m: any) => {
+            if (m.husbandId === curr && !visibleIds.has(m.wifeId)) {
+              visibleIds.add(m.wifeId);
+              q.push(m.wifeId);
+            }
+            if (m.wifeId === curr && !visibleIds.has(m.husbandId)) {
+              visibleIds.add(m.husbandId);
+              q.push(m.husbandId);
+            }
+          });
+
+          persons.forEach((p: any) => {
+            if ((p.fatherId === curr || p.motherId === curr) && !visibleIds.has(p.id)) {
+              visibleIds.add(p.id);
+              q.push(p.id);
+            }
+          });
+        }
+        
+        persons = persons.filter((p: any) => visibleIds.has(p.id));
+        marriages = marriages.filter((m: any) => visibleIds.has(m.husbandId) && visibleIds.has(m.wifeId));
+      }
 
       // Urutkan berdasarkan tanggal lahir (yang tertua di kiri/awal)
       const sortedPersons = [...persons].sort((a, b) => {
@@ -469,7 +503,7 @@ export default function TreePage() {
     } finally {
       setLoading(false);
     }
-  }, [setNodes, setEdges, user, handleNodeAction]);
+  }, [setNodes, setEdges, user, handleNodeAction, focusedPersonId]);
 
   useEffect(() => {
     fetchTree();
@@ -499,6 +533,13 @@ export default function TreePage() {
         fitView
       >
         <Controls>
+          {focusedPersonId && (
+            <ControlButton onClick={() => setFocusedPersonId(null)} title="Batal Fokus" style={{ color: '#ef4444' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </ControlButton>
+          )}
           <ControlButton onClick={fetchTree} title="Refresh Silsilah">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
