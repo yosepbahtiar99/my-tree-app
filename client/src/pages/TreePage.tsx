@@ -17,7 +17,8 @@ import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
 import PersonNodeV2 from '../components/PersonNodeV2';
 import SearchBar from '../components/SearchBar';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, BaseEdge } from '@xyflow/react';
+import type { EdgeProps } from '@xyflow/react';
 
 const MarriageNode = () => (
   <div style={{ width: 4, height: 4, background: '#333', borderRadius: '50%' }}>
@@ -27,38 +28,37 @@ const MarriageNode = () => (
   </div>
 );
 
-const nodeTypes = { person: PersonNodeV2, marriage: MarriageNode };
+const ChildEdge = ({ sourceX, sourceY, targetX, targetY, style, markerEnd, source }: EdgeProps) => {
+  let hash = 0;
+  for (let i = 0; i < source.length; i++) {
+    hash = source.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const offset = 20 + (Math.abs(hash) % 60); 
+  const midY = sourceY + offset;
+  
+  const path = `M ${sourceX},${sourceY} L ${sourceX},${midY} L ${targetX},${midY} L ${targetX},${targetY}`;
+  
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
+  const strokeColor = colors[Math.abs(hash) % colors.length];
 
-const dagreGraph = new dagre.graphlib.Graph({ compound: true });
-dagreGraph.setDefaultEdgeLabel(() => ({}));
+  return <BaseEdge path={path} markerEnd={markerEnd} style={{ ...style, stroke: strokeColor }} />;
+};
+
+const nodeTypes = { person: PersonNodeV2, marriage: MarriageNode };
+const edgeTypes = { child: ChildEdge };
 
 const nodeWidth = 240;
 const nodeHeight = 64;
 
 const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string, any>, direction = 'TB') => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction });
 
-  nodes.forEach((node) => {
-    const isMarriage = node.id.startsWith('marriage-');
-    dagreGraph.setNode(node.id, { 
-      width: isMarriage ? 1 : nodeWidth, 
-      height: isMarriage ? 1 : nodeHeight 
-    });
-  });
+  const marriageDotWidth = 60;
 
-  edges.forEach((edge) => {
-    // Beri bobot sangat besar (10000) untuk garis yang menuju ke titik nikah
-    // agar Dagre menempatkan suami, istri, dan titik nikah sedekat mungkin (bersebelahan)
-    const isMarriageEdge = edge.target.startsWith('marriage-');
-    dagreGraph.setEdge(edge.source, edge.target, { 
-      weight: isMarriageEdge ? 10000 : 1,
-      minlen: isMarriageEdge ? 0 : 1
-    });
-  });
-
-  // CLUSTERING: Kelompokkan Pasangan ke dalam Compound Graph
-  let clusterCounter = 0;
-  const spouseClusters = new Map<string, string>(); // nodeId -> clusterId
+  // 1. Identifikasi orang-orang dan bangun adjList (Adjacency List untuk Pasangan)
+  const personNodes = nodes.filter(n => n.type === 'person');
   const adjList = new Map<string, string[]>();
 
   marriageMap.forEach((m) => {
@@ -70,80 +70,169 @@ const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string
     adjList.get(w)!.push(h);
   });
 
-  const visitedNodes = new Set<string>();
-  adjList.forEach((_, node) => {
-    if (!visitedNodes.has(node)) {
-      const clusterId = `cluster-${clusterCounter++}`;
-      dagreGraph.setNode(clusterId, {}); // Buat node grup (kotak transparan)
+  // 2. Kumpulkan Cluster menggunakan BFS
+  const visited = new Set<string>();
+  const clusters: string[][] = [];
+
+  personNodes.forEach(pn => {
+    const pid = pn.id;
+    if (!visited.has(pid)) {
+      const comp: string[] = [];
+      const q = [pid];
+      visited.add(pid);
       
-      const queue = [node];
-      visitedNodes.add(node);
-      
-      while (queue.length > 0) {
-        const curr = queue.shift()!;
-        spouseClusters.set(curr, clusterId);
-        dagreGraph.setParent(curr, clusterId); // Kurung orang ini ke dalam grup
-        
+      while(q.length > 0) {
+        const curr = q.shift()!;
+        comp.push(curr);
         const neighbors = adjList.get(curr) || [];
         neighbors.forEach(n => {
-          if (!visitedNodes.has(n)) {
-            visitedNodes.add(n);
-            queue.push(n);
+          if (!visited.has(n)) {
+            visited.add(n);
+            q.push(n);
           }
         });
       }
+      clusters.push(comp);
     }
   });
 
-  // Kurung juga titik nikah (marriage dot) ke dalam grup yang sama
-  marriageMap.forEach((m, key) => {
-    const clusterId = spouseClusters.get(m.husbandId.toString());
-    if (clusterId) {
-      dagreGraph.setParent(key, clusterId);
-    }
-  });
+  // Helper untuk mendapatkan key marriage
+  const getMarriageKey = (id1: string, id2: string) => `marriage-${[id1, id2].sort().join('-')}`;
 
-  dagre.layout(dagreGraph);
-
-  const newNodes = nodes.map((node) => {
-    let nx = dagreGraph.node(node.id).x;
-    let ny = dagreGraph.node(node.id).y;
-
-    if (node.id.startsWith('marriage-')) {
-      const parents = edges.filter(e => e.target === node.id).map(e => dagreGraph.node(e.source));
-      if (parents.length === 2) {
-        nx = (parents[0].x + parents[1].x) / 2;
-        ny = (parents[0].y + parents[1].y) / 2;
+  // 3. Flatten setiap cluster menjadi sequence kaku (Suami - TitikNikah - Istri)
+  const clusterSequences = clusters.map(comp => {
+    const placed = new Set<string>();
+    const sequence: { id: string, type: 'person' | 'marriage' }[] = [];
+    
+    sequence.push({ id: comp[0], type: 'person' });
+    placed.add(comp[0]);
+    
+    let added = true;
+    while(added) {
+      added = false;
+      for (const p of comp) {
+        if (placed.has(p)) continue;
+        
+        const leftMost = sequence[0];
+        if (leftMost.type === 'person' && marriageMap.has(getMarriageKey(p, leftMost.id))) {
+          sequence.unshift({ id: getMarriageKey(p, leftMost.id), type: 'marriage' });
+          sequence.unshift({ id: p, type: 'person' });
+          placed.add(p);
+          added = true;
+          continue;
+        }
+        
+        const rightMost = sequence[sequence.length - 1];
+        if (rightMost.type === 'person' && marriageMap.has(getMarriageKey(p, rightMost.id))) {
+          sequence.push({ id: getMarriageKey(p, rightMost.id), type: 'marriage' });
+          sequence.push({ id: p, type: 'person' });
+          placed.add(p);
+          added = true;
+          continue;
+        }
+      }
+      
+      // Fallback jika punya >2 pasangan (Poligami kompleks)
+      if (!added && placed.size < comp.length) {
+        for (const p of comp) {
+          if (!placed.has(p)) {
+            const spouseInSeq = sequence.find(s => s.type === 'person' && marriageMap.has(getMarriageKey(p, s.id)));
+            if (spouseInSeq) {
+              sequence.push({ id: getMarriageKey(p, spouseInSeq.id), type: 'marriage' });
+              sequence.push({ id: p, type: 'person' });
+              placed.add(p);
+              added = true;
+              break;
+            }
+          }
+        }
       }
     }
-
-    return {
-      ...node,
-      position: {
-        x: nx - (node.id.startsWith('marriage-') ? 1 : nodeWidth) / 2,
-        y: ny - (node.id.startsWith('marriage-') ? 1 : nodeHeight) / 2,
-      },
-    };
+    return sequence;
   });
 
-  const newEdges = edges.map((edge) => {
+  // 4. Daftarkan Cluster ke Dagre sebagai 1 Node Solid
+  const elementToCluster = new Map<string, string>();
+  
+  clusterSequences.forEach((seq, idx) => {
+    const clusterId = `cluster-${idx}`;
+    let clusterWidth = 0;
+    seq.forEach(item => {
+      clusterWidth += (item.type === 'person' ? nodeWidth : marriageDotWidth);
+      elementToCluster.set(item.id, clusterId);
+    });
+
+    const hasMarriage = seq.length > 1;
+    const padding = hasMarriage ? 400 : 0; // Spouse Separation Gap
+
+    dagreGraph.setNode(clusterId, { width: clusterWidth + padding, height: nodeHeight });
+  });
+
+  // 5. Daftarkan Edges (Anak) antar Cluster ke Dagre
+  edges.forEach(edge => {
+    if (edge.target.startsWith('marriage-') === false) { // Garis ke anak
+      const parentCluster = elementToCluster.get(edge.source);
+      const childCluster = elementToCluster.get(edge.target);
+      if (parentCluster && childCluster && parentCluster !== childCluster) {
+        dagreGraph.setEdge(parentCluster, childCluster);
+      }
+    }
+  });
+
+  // 6. Jalankan Layout Dagre (Hanya mengurus Blok)
+  dagre.layout(dagreGraph);
+
+  // 7. Unpacking Koordinat dari Blok Dagre ke Node Individu
+  const finalNodes: any[] = [];
+  
+  clusterSequences.forEach((seq, idx) => {
+    const clusterId = `cluster-${idx}`;
+    const cNode = dagreGraph.node(clusterId);
+    if (!cNode) return;
+    
+    const hasMarriage = seq.length > 1;
+    const padding = hasMarriage ? 400 : 0;
+    const innerWidth = cNode.width - padding;
+
+    let currentX = cNode.x - innerWidth / 2;
+    const currentY = cNode.y;
+    
+    seq.forEach(item => {
+      const originalNode = nodes.find(n => n.id === item.id);
+      if (item.type === 'person') {
+        finalNodes.push({
+          ...originalNode,
+          position: { x: currentX, y: currentY - nodeHeight / 2 }
+        });
+        currentX += nodeWidth;
+      } else {
+        finalNodes.push({
+          ...originalNode,
+          position: { x: currentX + (marriageDotWidth / 2) - 2, y: currentY - 2 } // 4x4 dot size
+        });
+        currentX += marriageDotWidth;
+      }
+    });
+  });
+
+  // 8. Update target/source handle untuk edge horizontal (suami-istri)
+  const finalEdges = edges.map((edge) => {
     if (edge.target.startsWith('marriage-')) {
-      const sourceNode = dagreGraph.node(edge.source);
-      const targetNode = dagreGraph.node(edge.target);
+      const sourceNode = finalNodes.find(n => n.id === edge.source);
+      const targetNode = finalNodes.find(n => n.id === edge.target);
       if (sourceNode && targetNode) {
-        const isLeft = sourceNode.x < targetNode.x;
+        const isLeft = sourceNode.position.x < targetNode.position.x;
         return {
           ...edge,
           sourceHandle: isLeft ? 'right-source' : 'left-source',
           targetHandle: isLeft ? 'left-target' : 'right-target',
-          type: 'straight'
         };
       }
     }
     return edge;
   });
 
-  return { nodes: newNodes, edges: newEdges };
+  return { nodes: finalNodes, edges: finalEdges };
 };
 
 export default function TreePage() {
@@ -338,9 +427,9 @@ export default function TreePage() {
             target: person.id.toString(),
             sourceHandle: 'bottom-source',
             targetHandle: 'top',
-            type: 'step',
+            type: 'child',
             animated: false,
-            style: { stroke: '#94a3b8', strokeWidth: 2 }
+            style: { strokeWidth: 2 }
           });
         } else if (person.fatherId) {
           initialEdges.push({
@@ -349,9 +438,9 @@ export default function TreePage() {
             target: person.id.toString(),
             sourceHandle: 'bottom',
             targetHandle: 'top',
-            type: 'step',
+            type: 'child',
             animated: false,
-            style: { stroke: '#94a3b8', strokeWidth: 2 }
+            style: { strokeWidth: 2 }
           });
         } else if (person.motherId) {
           initialEdges.push({
@@ -360,9 +449,9 @@ export default function TreePage() {
             target: person.id.toString(),
             sourceHandle: 'bottom',
             targetHandle: 'top',
-            type: 'step',
+            type: 'child',
             animated: false,
-            style: { stroke: '#94a3b8', strokeWidth: 2 }
+            style: { strokeWidth: 2 }
           });
         }
       });
@@ -403,6 +492,7 @@ export default function TreePage() {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}

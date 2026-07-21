@@ -80,8 +80,8 @@ const deletePerson = async (req, res) => {
     await AuditLog.create({
       userId: req.user.id,
       action: 'DELETE',
-      targetPersonId: id,
-      details: { message: `Menghapus anggota keluarga: ${name}` }
+      targetPersonId: null,
+      details: { message: `Menghapus anggota keluarga: ${name}`, deletedPersonId: id }
     });
 
     res.json({ message: 'Person berhasil dihapus' });
