@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../lib/api';
 import { useDialogStore } from '../store/dialogStore';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import type { Crop, PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 interface PersonFormModalProps {
   isOpen: boolean;
@@ -27,6 +30,40 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
   
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imgSrc, setImgSrc] = useState('');
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [showCropper, setShowCropper] = useState(false);
+
+  function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number) {
+    return centerCrop(makeAspectCrop({ unit: '%', width: 90 }, aspect, mediaWidth, mediaHeight), mediaWidth, mediaHeight);
+  }
+
+  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const { width, height } = e.currentTarget;
+    setCrop(centerAspectCrop(width, height, 1));
+  }
+
+  const getCroppedImg = async () => {
+    if (!completedCrop || !imgRef.current) return null;
+    const canvas = document.createElement('canvas');
+    const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+    const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+    canvas.width = completedCrop.width;
+    canvas.height = completedCrop.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(
+      imgRef.current,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0, 0, completedCrop.width, completedCrop.height
+    );
+    return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +77,10 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
         motherId: editData?.motherId || initialData?.motherId || '',
       });
       setPhotoFile(null);
+      setImgSrc('');
+      setCrop(undefined);
+      setCompletedCrop(undefined);
+      setShowCropper(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -56,9 +97,17 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
     }));
   };
 
-  const handlePhotoChange = (e: any) => {
-    if (e.target.files && e.target.files[0]) {
-      setPhotoFile(e.target.files[0]);
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setPhotoFile(file);
+      setCrop(undefined);
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setImgSrc(reader.result?.toString() || '');
+        setShowCropper(true);
+      });
+      reader.readAsDataURL(file);
     }
   };
 
@@ -69,7 +118,18 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
     try {
       let photoId = editData?.photoId;
 
-      if (photoFile) {
+      if (photoFile && showCropper) {
+        const finalBlob = await getCroppedImg();
+        if (finalBlob) {
+          const formDataUpload = new FormData();
+          const croppedFile = new File([finalBlob], 'cropped.jpg', { type: 'image/jpeg' });
+          formDataUpload.append('photo', croppedFile);
+          const resPhoto = await api.post('/persons/upload', formDataUpload, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          photoId = resPhoto.data.photoId;
+        }
+      } else if (photoFile) {
         const formDataUpload = new FormData();
         formDataUpload.append('photo', photoFile);
         const resPhoto = await api.post('/persons/upload', formDataUpload, {
@@ -180,7 +240,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
             )}
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-1">Foto Wajah (Ambil Kamera / Pilih File)</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Foto Wajah (Pilih File)</label>
               
               {editData?.photoId && !photoFile && (
                 <div className="mb-3">
@@ -202,7 +262,31 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
                 onChange={handlePhotoChange} 
                 className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
               />
-              {photoFile && <p className="text-xs text-green-600 mt-1">File terpilih: {photoFile.name}</p>}
+              {photoFile && !showCropper && <p className="text-xs text-green-600 mt-1">File terpilih: {photoFile.name}</p>}
+              
+              {showCropper && imgSrc && (
+                <div className="mt-4 border border-border p-3 bg-slate-50 rounded-lg shadow-sm">
+                  <p className="text-sm font-medium mb-2 text-slate-700">Sesuaikan Area Wajah (Potongan 1:1)</p>
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={1}
+                    className="max-h-[300px] overflow-hidden rounded-md border border-slate-300 flex justify-center bg-black/5"
+                  >
+                    <img 
+                      ref={imgRef} 
+                      alt="Crop" 
+                      src={imgSrc} 
+                      onLoad={onImageLoad} 
+                      style={{ maxHeight: '300px', objectFit: 'contain' }} 
+                    />
+                  </ReactCrop>
+                  <div className="mt-3 text-xs text-muted-foreground bg-white p-2 rounded border border-slate-200 shadow-sm">
+                    💡 Geser kotak pemotong di atas ke area wajah yang diinginkan. Gambar akan dipotong secara otomatis saat ditekan tombol Simpan.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

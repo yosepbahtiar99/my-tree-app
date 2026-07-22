@@ -83,43 +83,34 @@ export default function PersonDetailDrawer({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Cover & Avatar */}
-          <div className="relative h-32 bg-primary/10">
-            {imageUrl && (
-              <div 
-                className="absolute inset-0 opacity-20 bg-cover bg-center blur-sm"
-                style={{ backgroundImage: `url(${imageUrl})` }}
-              />
+          {/* Square Photo */}
+          <div className="w-full aspect-square bg-slate-100 relative shrink-0">
+            {imageUrl ? (
+              <img src={imageUrl} alt={person.fullName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300 text-7xl font-serif">
+                {person.fullName.charAt(0)}
+              </div>
             )}
           </div>
           
-          <div className="px-6 pb-6 relative">
-            <div className="flex justify-between items-end -mt-12 mb-4">
-              <div className="w-24 h-24 rounded-full border-4 border-white shadow-md bg-white overflow-hidden relative">
-                {imageUrl ? (
-                  <img src={imageUrl} alt={person.fullName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-3xl font-serif">
-                    {person.fullName.charAt(0)}
-                  </div>
-                )}
+          <div className="p-6 relative">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-serif font-bold text-foreground mb-1 leading-tight">{person.fullName}</h2>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  {person.gender === 'MALE' ? 'Laki-Laki' : 'Perempuan'}
+                </p>
               </div>
               
               {onAction && (
                 <button 
                   onClick={() => onAction('FOCUS_FAMILY', person)}
-                  className="mb-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors shrink-0 mt-1"
                 >
                   🎯 Fokus
                 </button>
               )}
-            </div>
-            
-            <div className="mb-6">
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-1 leading-tight">{person.fullName}</h2>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                {person.gender === 'MALE' ? 'Laki-Laki' : 'Perempuan'}
-              </p>
             </div>
             
             <div className="space-y-4 text-sm mb-8">

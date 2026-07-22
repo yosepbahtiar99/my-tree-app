@@ -136,11 +136,38 @@ const getTreeData = async (req, res) => {
   }
 };
 
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
 const uploadPhoto = (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'File tidak ditemukan' });
   }
-  res.json({ photoId: req.file.filename });
+
+  try {
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const hashSum = crypto.createHash('md5');
+    hashSum.update(fileBuffer);
+    const hex = hashSum.digest('hex');
+    
+    const ext = path.extname(req.file.originalname) || '.jpg';
+    const newFilename = `${hex}${ext}`;
+    const newFilePath = path.join(req.file.destination, newFilename);
+
+    if (fs.existsSync(newFilePath) && req.file.path !== newFilePath) {
+      // File with this hash already exists, delete the newly uploaded temporary file
+      fs.unlinkSync(req.file.path);
+      res.json({ photoId: newFilename, duplicate: true });
+    } else {
+      // Rename the file to its hash
+      fs.renameSync(req.file.path, newFilePath);
+      res.json({ photoId: newFilename, duplicate: false });
+    }
+  } catch (err) {
+    console.error('Error processing upload:', err);
+    res.status(500).json({ message: 'Error processing file' });
+  }
 };
 
 const addParent = async (req, res) => {
