@@ -50,8 +50,10 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
     const canvas = document.createElement('canvas');
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
     const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    const targetWidth = Math.floor(completedCrop.width * scaleX);
+    const targetHeight = Math.floor(completedCrop.height * scaleY);
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     ctx.drawImage(
@@ -60,7 +62,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
       completedCrop.y * scaleY,
       completedCrop.width * scaleX,
       completedCrop.height * scaleY,
-      0, 0, completedCrop.width, completedCrop.height
+      0, 0, targetWidth, targetHeight
     );
     return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
   };
