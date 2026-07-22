@@ -7,7 +7,6 @@ import DashboardPage from './pages/DashboardPage';
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { useAuthStore } from './store/authStore';
-import { api } from './lib/api';
 import GlobalDialogs from './components/GlobalDialogs';
 
 const Navbar = () => {

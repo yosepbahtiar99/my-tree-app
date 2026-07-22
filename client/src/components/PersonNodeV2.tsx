@@ -36,7 +36,10 @@ export default function PersonNodeV2({ data }: any) {
     : 'transition-all duration-300';
 
   return (
-    <div className={`relative flex flex-row items-center w-[240px] rounded-full p-2 border shadow-sm cursor-pointer ${bgColor} ${showMenu ? 'menu-open !z-[9999]' : ''} ${highlightClass}`}>
+    <div 
+      className={`relative flex flex-row items-center w-[240px] rounded-full p-2 border shadow-sm cursor-pointer ${bgColor} ${showMenu ? 'menu-open !z-[9999]' : ''} ${highlightClass}`}
+      onClick={(e) => handleAction(e, 'VIEW_PERSON')}
+    >
       {/* Handles untuk Relasi Pasangan (Kiri & Kanan) - Dibuat Transparan */}
       <Handle type="source" position={Position.Right} id="right-source" className="!opacity-0 !cursor-default !w-1 !h-1" />
       <Handle type="source" position={Position.Left} id="left-source" className="!opacity-0 !cursor-default !w-1 !h-1" />

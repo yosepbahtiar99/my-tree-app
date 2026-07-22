@@ -18,7 +18,7 @@ import jsPDF from 'jspdf';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { useDialogStore } from '../store/dialogStore';
-import PersonDetailModal from '../components/PersonDetailModal';
+import PersonDetailDrawer from '../components/PersonDetailDrawer';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
 import PersonNodeV2 from '../components/PersonNodeV2';
@@ -236,7 +236,7 @@ const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string
 
 export default function TreePage() {
   const { user } = useAuthStore();
-  const { showAlert } = useDialogStore();
+  const { showAlert, showConfirm } = useDialogStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [loading, setLoading] = useState(true);
@@ -329,7 +329,7 @@ export default function TreePage() {
     }, 3000);
   }, []);
 
-  const handleNodeAction = useCallback((action: string, person: any) => {
+  const handleNodeAction = useCallback(async (action: string, person: any) => {
     if (action === 'ADD_CHILD') {
       // Cari apakah person ini punya pasangan (marriage)
       let spouseId = '';
@@ -356,15 +356,40 @@ export default function TreePage() {
       setMarriageModalHusbandId(person.gender === 'MALE' ? person.id : '');
       setMarriageModalWifeId(person.gender === 'FEMALE' ? person.id : '');
       setIsMarriageModalOpen(true);
-    } else if (action === 'EDIT_PROFILE') {
+    } else if (action === 'EDIT_PROFILE' || action === 'EDIT') {
       setPersonModalAddingParentForId(undefined);
       setPersonModalEditData(person);
       setPersonModalInitialData(null);
       setIsPersonModalOpen(true);
+    } else if (action === 'DELETE') {
+      const confirmed = await showConfirm({
+        title: 'Hapus Anggota Keluarga?',
+        message: 'Yakin ingin menghapus anggota ini? Data yang dihapus tidak bisa dikembalikan.',
+        type: 'danger',
+        confirmText: 'Hapus'
+      });
+      if (confirmed) {
+        try {
+          await api.delete(`/persons/${person.id}`);
+          fetchTree();
+        } catch (error: any) {
+          showAlert({ title: 'Gagal', message: error.response?.data?.message || 'Gagal menghapus person', type: 'error' });
+        }
+      }
     } else if (action === 'FOCUS_FAMILY') {
       setFocusedPersonId(person.id);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawMarriagesRef, showConfirm, showAlert]);
+
+  const handleDrawerAction = useCallback((action: string, personPayload: any) => {
+    if (action === 'VIEW_PERSON') {
+      setSelectedPerson(personPayload);
+    } else {
+      setSelectedPerson(null);
+      handleNodeAction(action, personPayload);
+    }
+  }, [handleNodeAction]);
 
   const fetchTree = useCallback(async () => {
     try {
@@ -468,7 +493,7 @@ export default function TreePage() {
         data: {
           ...p,
           user,
-          onAction: handleNodeAction,
+          onAction: handleDrawerAction,
         },
       }));
 
@@ -632,10 +657,14 @@ export default function TreePage() {
         <SearchBar persons={rawPersons} onHighlight={handleHighlight} />
       </ReactFlow>
       
-      <PersonDetailModal 
+      <PersonDetailDrawer 
         isOpen={!!selectedPerson} 
         onClose={() => setSelectedPerson(null)} 
         person={selectedPerson} 
+        allPersons={rawPersons}
+        allMarriages={rawMarriagesRef.current}
+        onAction={handleDrawerAction}
+        isAdmin={!!user}
       />
 
       {/* Modals for Context Menu Actions */}
