@@ -78,56 +78,58 @@ export default function PersonNodeV2({ data }: any) {
         </p>
       </div>
 
-      {/* Kanan: Tombol Menu (Hanya Tampil Jika Login) */}
-      {data.user && (
-        <div className="shrink-0 mr-1" ref={menuRef}>
-          <button 
-            onClick={handleToggleMenu}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-black/20 hover:bg-black/40 text-white transition-colors shadow-sm border border-transparent cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
+      {/* Kanan: Tombol Menu (Selalu Tampil) */}
+      <div className="shrink-0 mr-1" ref={menuRef}>
+        <button 
+          onClick={handleToggleMenu}
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-black/20 hover:bg-black/40 text-white transition-colors shadow-sm border border-transparent cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </button>
 
-          {showMenu && (
-            <div className="absolute top-12 right-0 bg-white rounded-lg shadow-2xl border border-slate-100 py-1 w-44 z-[99999] overflow-hidden">
-              <button 
-                onClick={(e) => handleAction(e, 'ADD_PARENT')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors flex items-center gap-2"
-              >
-                <span>👴</span> Tambah Orang Tua
-              </button>
-              <button 
-                onClick={(e) => handleAction(e, 'ADD_CHILD')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
-              >
-                <span>👶</span> Tambah Anak
-              </button>
-              <button 
-                onClick={(e) => handleAction(e, 'ADD_SPOUSE')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition-colors flex items-center gap-2"
-              >
-                <span>❤️</span> Tambah Pasangan
-              </button>
-              <div className="h-px bg-slate-100 my-1"></div>
-              <button 
-                onClick={(e) => handleAction(e, 'EDIT_PROFILE')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
-              >
-                <span>✏️</span> Edit Profil
-              </button>
-              <div className="h-px bg-slate-100 my-1"></div>
-              <button 
-                onClick={(e) => handleAction(e, 'FOCUS_FAMILY')}
-                className="w-full text-left px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
-              >
-                <span>🎯</span> Fokus Keluarga
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        {showMenu && (
+          <div className="absolute top-12 right-0 bg-white rounded-lg shadow-2xl border border-slate-100 py-1 w-44 z-[99999] overflow-hidden">
+            {data.user && (
+              <>
+                <button 
+                  onClick={(e) => handleAction(e, 'ADD_PARENT')}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors flex items-center gap-2"
+                >
+                  <span>👴</span> Tambah Orang Tua
+                </button>
+                <button 
+                  onClick={(e) => handleAction(e, 'ADD_CHILD')}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
+                >
+                  <span>👶</span> Tambah Anak
+                </button>
+                <button 
+                  onClick={(e) => handleAction(e, 'ADD_SPOUSE')}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition-colors flex items-center gap-2"
+                >
+                  <span>❤️</span> Tambah Pasangan
+                </button>
+                <div className="h-px bg-slate-100 my-1"></div>
+                <button 
+                  onClick={(e) => handleAction(e, 'EDIT_PROFILE')}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
+                >
+                  <span>✏️</span> Edit Profil
+                </button>
+                <div className="h-px bg-slate-100 my-1"></div>
+              </>
+            )}
+            <button 
+              onClick={(e) => handleAction(e, 'FOCUS_FAMILY')}
+              className="w-full text-left px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+            >
+              <span>🎯</span> Fokus Keluarga
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
