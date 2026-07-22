@@ -45,12 +45,26 @@ export default function DashboardPage() {
   };
 
   const handleDeletePerson = async (id: number) => {
-    if (confirm('Yakin ingin menghapus anggota ini?')) {
+    // Validasi Opsi A: Blokir Keras (Strict Mode)
+    const targetIdStr = id.toString();
+    const hasChildren = persons.some(p => p.fatherId?.toString() === targetIdStr || p.motherId?.toString() === targetIdStr);
+    if (hasChildren) {
+      alert('TIDAK BISA DIHAPUS ⛔\n\nOrang ini masih tercatat sebagai Orang Tua dari anggota keluarga lain. Silakan hapus atau ubah relasi anak-anaknya terlebih dahulu.');
+      return;
+    }
+
+    const hasMarriages = marriages.some(m => m.husbandId?.toString() === targetIdStr || m.wifeId?.toString() === targetIdStr);
+    if (hasMarriages) {
+      alert('TIDAK BISA DIHAPUS ⛔\n\nOrang ini masih memiliki data Pernikahan. Silakan hapus data pernikahannya terlebih dahulu di tabel bawah.');
+      return;
+    }
+
+    if (confirm('Yakin ingin menghapus anggota ini? Data yang dihapus tidak bisa dikembalikan.')) {
       try {
         await api.delete(`/persons/${id}`);
         fetchData();
-      } catch (error) {
-        alert('Gagal menghapus person');
+      } catch (error: any) {
+        alert(error.response?.data?.message || 'Gagal menghapus person');
       }
     }
   };
