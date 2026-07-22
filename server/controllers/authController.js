@@ -96,9 +96,30 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id; // Dari JWT payload
+
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Password lama salah' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Password berhasil diubah' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error change password', error: error.message });
+  }
+};
+
 const logout = (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logout berhasil' });
 };
 
-module.exports = { register, login, getPendingUsers, approveUser, logout, getAllUsers, deleteUser };
+module.exports = { register, login, getPendingUsers, approveUser, logout, getAllUsers, deleteUser, changePassword };
