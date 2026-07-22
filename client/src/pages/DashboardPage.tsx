@@ -1,38 +1,87 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useDialogStore } from '../store/dialogStore';
 import { api } from '../lib/api';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { showAlert, showConfirm } = useDialogStore();
   const [persons, setPersons] = useState<any[]>([]);
   const [marriages, setMarriages] = useState<any[]>([]);
+  const [allPersons, setAllPersons] = useState<any[]>([]);
+  const [allMarriages, setAllMarriages] = useState<any[]>([]);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMarriageModalOpen, setIsMarriageModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
+  const [editMarriageData, setEditMarriageData] = useState<any>(null);
 
-  const fetchData = async () => {
+  const [personsPage, setPersonsPage] = useState(1);
+  const [personsTotalPages, setPersonsTotalPages] = useState(1);
+
+  const [marriagesPage, setMarriagesPage] = useState(1);
+  const [marriagesTotalPages, setMarriagesTotalPages] = useState(1);
+
+  const fetchPersonsPaginated = async (page: number) => {
+    try {
+      const res = await api.get(`/persons?page=${page}&limit=10`);
+      setPersons(res.data.data);
+      setPersonsTotalPages(res.data.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to fetch paginated persons', error);
+    }
+  };
+
+  const fetchMarriagesPaginated = async (page: number) => {
+    try {
+      const res = await api.get(`/marriages?page=${page}&limit=10`);
+      setMarriages(res.data.data);
+      setMarriagesTotalPages(res.data.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to fetch paginated marriages', error);
+    }
+  };
+
+  const fetchAllData = async () => {
     try {
       const [personsRes, pendingRes, marriagesRes] = await Promise.all([
         api.get('/persons'),
         user?.role === 'SUPER_ADMIN' ? api.get('/auth/pending-users') : Promise.resolve({ data: [] }),
         api.get('/marriages'),
       ]);
-      setPersons(personsRes.data);
+      setAllPersons(personsRes.data);
       setPendingUsers(pendingRes.data);
-      setMarriages(marriagesRes.data);
+      setAllMarriages(marriagesRes.data);
     } catch (error) {
-      console.error('Failed to fetch data', error);
+      console.error('Failed to fetch all data', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchData = async () => {
+    await Promise.all([fetchPersonsPaginated(personsPage), fetchMarriagesPaginated(marriagesPage), fetchAllData()]);
+  };
+
   useEffect(() => {
-    fetchData();
+    if (user) {
+      fetchPersonsPaginated(personsPage);
+    }
+  }, [personsPage, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchMarriagesPaginated(marriagesPage);
+    }
+  }, [marriagesPage, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAllData();
+    }
   }, [user]);
 
   const handleApprove = async (id: number) => {
@@ -40,42 +89,61 @@ export default function DashboardPage() {
       await api.put(`/auth/approve/${id}`);
       fetchData(); // Refresh list
     } catch (error) {
-      alert('Gagal menyetujui user');
+      showAlert({ title: 'Gagal', message: 'Gagal menyetujui user', type: 'error' });
     }
   };
 
   const handleDeletePerson = async (id: number) => {
     // Validasi Opsi A: Blokir Keras (Strict Mode)
     const targetIdStr = id.toString();
-    const hasChildren = persons.some(p => p.fatherId?.toString() === targetIdStr || p.motherId?.toString() === targetIdStr);
+    const hasChildren = allPersons.some(p => p.fatherId?.toString() === targetIdStr || p.motherId?.toString() === targetIdStr);
     if (hasChildren) {
-      alert('TIDAK BISA DIHAPUS ⛔\n\nOrang ini masih tercatat sebagai Orang Tua dari anggota keluarga lain. Silakan hapus atau ubah relasi anak-anaknya terlebih dahulu.');
+      await showAlert({ title: 'Tidak Bisa Dihapus', message: 'Orang ini masih tercatat sebagai Orang Tua dari anggota keluarga lain. Silakan hapus atau ubah relasi anak-anaknya terlebih dahulu.', type: 'error' });
       return;
     }
 
-    const hasMarriages = marriages.some(m => m.husbandId?.toString() === targetIdStr || m.wifeId?.toString() === targetIdStr);
+    const hasMarriages = allMarriages.some(m => m.husbandId?.toString() === targetIdStr || m.wifeId?.toString() === targetIdStr);
     if (hasMarriages) {
-      alert('TIDAK BISA DIHAPUS ⛔\n\nOrang ini masih memiliki data Pernikahan. Silakan hapus data pernikahannya terlebih dahulu di tabel bawah.');
+      await showAlert({ title: 'Tidak Bisa Dihapus', message: 'Orang ini masih memiliki data Pernikahan. Silakan hapus data pernikahannya terlebih dahulu di tabel bawah.', type: 'error' });
       return;
     }
 
-    if (confirm('Yakin ingin menghapus anggota ini? Data yang dihapus tidak bisa dikembalikan.')) {
+    const confirmed = await showConfirm({
+      title: 'Hapus Anggota Keluarga?',
+      message: 'Yakin ingin menghapus anggota ini? Data yang dihapus tidak bisa dikembalikan.',
+      type: 'danger',
+      confirmText: 'Hapus'
+    });
+
+    if (confirmed) {
       try {
         await api.delete(`/persons/${id}`);
         fetchData();
       } catch (error: any) {
-        alert(error.response?.data?.message || 'Gagal menghapus person');
+        showAlert({ title: 'Gagal', message: error.response?.data?.message || 'Gagal menghapus person', type: 'error' });
       }
     }
   };
 
-  const handleDeleteMarriage = async (id: string) => {
-    if (confirm('Yakin ingin menghapus relasi pernikahan ini?')) {
+  const handleEditMarriageClick = (marriage: any) => {
+    setEditMarriageData(marriage);
+    setIsMarriageModalOpen(true);
+  };
+
+  const handleDeleteMarriage = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: 'Hapus Pernikahan?',
+      message: 'Yakin ingin menghapus relasi pernikahan ini?',
+      type: 'danger',
+      confirmText: 'Hapus'
+    });
+
+    if (confirmed) {
       try {
         await api.delete(`/marriages/${id}`);
         fetchData();
       } catch (error) {
-        alert('Gagal menghapus data pernikahan');
+        showAlert({ title: 'Gagal', message: 'Gagal menghapus data pernikahan', type: 'error' });
       }
     }
   };
@@ -143,6 +211,7 @@ export default function DashboardPage() {
           <table className="min-w-full divide-y divide-border/50">
             <thead className="bg-muted">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">#</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Nama</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lahir - Wafat</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Usia</th>
@@ -152,10 +221,11 @@ export default function DashboardPage() {
             <tbody className="bg-white divide-y divide-border/50">
               {persons.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">Belum ada data anggota keluarga.</td>
+                  <td colSpan={5} className="px-6 py-4 text-center text-muted-foreground">Belum ada data anggota keluarga.</td>
                 </tr>
-              ) : persons.map((p) => (
+              ) : persons.map((p, index) => (
                 <tr key={p.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{(personsPage - 1) * 10 + index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{p.fullName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {p.birthDate || '?'} - {p.isDeceased ? (p.deathDate || '?') : 'Sekarang'}
@@ -170,12 +240,32 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
+
+        <div className="flex justify-between items-center mt-4 px-2">
+          <button 
+            disabled={personsPage <= 1} 
+            onClick={() => setPersonsPage(p => p - 1)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-muted-foreground">
+            Halaman {personsPage} dari {personsTotalPages}
+          </span>
+          <button 
+            disabled={personsPage >= personsTotalPages} 
+            onClick={() => setPersonsPage(p => p + 1)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+          >
+            Selanjutnya
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Pasangan (Pernikahan)</h2>
-          <button onClick={() => setIsMarriageModalOpen(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
+          <button onClick={() => { setEditMarriageData(null); setIsMarriageModalOpen(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
             + Tambah Pasangan
           </button>
         </div>
@@ -184,6 +274,7 @@ export default function DashboardPage() {
           <table className="min-w-full divide-y divide-border/50">
             <thead className="bg-muted">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">#</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Suami</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Istri</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tanggal Menikah</th>
@@ -193,14 +284,16 @@ export default function DashboardPage() {
             <tbody className="bg-white divide-y divide-border/50">
               {marriages.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">Belum ada data pernikahan yang diinput secara eksplisit.</td>
+                  <td colSpan={5} className="px-6 py-4 text-center text-muted-foreground">Belum ada data pernikahan yang diinput secara eksplisit.</td>
                 </tr>
-              ) : marriages.map((m) => (
+              ) : marriages.map((m, index) => (
                 <tr key={m.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{(marriagesPage - 1) * 10 + index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Husband ? m.Husband.fullName : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Wife ? m.Wife.fullName : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{m.marriageDate || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-3">
+                    <button onClick={() => handleEditMarriageClick(m)} className="text-blue-600 hover:text-blue-800">Edit</button>
                     <button onClick={() => handleDeleteMarriage(m.id)} className="text-red-600 hover:text-red-800">Hapus</button>
                   </td>
                 </tr>
@@ -208,21 +301,42 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
+
+        <div className="flex justify-between items-center mt-4 px-2">
+          <button 
+            disabled={marriagesPage <= 1} 
+            onClick={() => setMarriagesPage(p => p - 1)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-muted-foreground">
+            Halaman {marriagesPage} dari {marriagesTotalPages}
+          </span>
+          <button 
+            disabled={marriagesPage >= marriagesTotalPages} 
+            onClick={() => setMarriagesPage(p => p + 1)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+          >
+            Selanjutnya
+          </button>
+        </div>
       </div>
       
       <PersonFormModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchData}
-        persons={persons}
+        persons={allPersons}
         editData={editData}
       />
 
       <MarriageFormModal
         isOpen={isMarriageModalOpen}
-        onClose={() => setIsMarriageModalOpen(false)}
+        onClose={() => { setIsMarriageModalOpen(false); setEditMarriageData(null); }}
         onSuccess={fetchData}
-        persons={persons}
+        persons={allPersons}
+        editData={editMarriageData}
       />
     </div>
   );

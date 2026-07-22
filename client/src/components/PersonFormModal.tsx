@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../lib/api';
+import { useDialogStore } from '../store/dialogStore';
 
 interface PersonFormModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface PersonFormModalProps {
 }
 
 export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, editData, initialData, addingParentForId }: PersonFormModalProps) {
+  const { showAlert } = useDialogStore();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: editData?.fullName || '',
@@ -96,8 +98,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
       onSuccess();
       onClose();
     } catch (error) {
-      alert('Gagal menyimpan data anggota keluarga.');
-      console.error(error);
+      showAlert({ title: 'Gagal', message: 'Gagal menyimpan data anggota keluarga.', type: 'error' });
     } finally {
       setLoading(false);
     }

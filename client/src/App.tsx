@@ -7,6 +7,8 @@ import DashboardPage from './pages/DashboardPage';
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { useAuthStore } from './store/authStore';
+import { api } from './lib/api';
+import GlobalDialogs from './components/GlobalDialogs';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -62,15 +64,18 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-background flex flex-col font-sans">
-        <Navbar />
-        <main className="flex-1 w-full relative">
-          <Routes>
-            <Route path="/" element={<ReactFlowProvider><TreePage /></ReactFlowProvider>} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-          </Routes>
-        </main>
+        <ReactFlowProvider>
+          <GlobalDialogs />
+          <Navbar />
+          <main className="flex-1 w-full relative">
+            <Routes>
+              <Route path="/" element={<TreePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+            </Routes>
+          </main>
+        </ReactFlowProvider>
       </div>
     </BrowserRouter>
   );

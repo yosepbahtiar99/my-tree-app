@@ -15,7 +15,36 @@ const calculateAge = (birthDate, deathDate, isDeceased) => {
 
 const getAllPersons = async (req, res) => {
   try {
-    const persons = await Person.findAll();
+    const { page, limit } = req.query;
+
+    if (page && limit) {
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 10;
+      const offset = (pageNum - 1) * limitNum;
+
+      const { count, rows } = await Person.findAndCountAll({
+        limit: limitNum,
+        offset: offset,
+        order: [['fullName', 'ASC']]
+      });
+
+      const data = rows.map(p => {
+        const pData = p.toJSON();
+        pData.age = calculateAge(p.birthDate, p.deathDate, p.isDeceased);
+        return pData;
+      });
+
+      return res.json({
+        data,
+        total: count,
+        page: pageNum,
+        totalPages: Math.ceil(count / limitNum)
+      });
+    }
+
+    const persons = await Person.findAll({
+      order: [['fullName', 'ASC']]
+    });
     const data = persons.map(p => {
       const pData = p.toJSON();
       pData.age = calculateAge(p.birthDate, p.deathDate, p.isDeceased);

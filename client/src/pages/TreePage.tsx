@@ -17,6 +17,7 @@ import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import { useDialogStore } from '../store/dialogStore';
 import PersonDetailModal from '../components/PersonDetailModal';
 import PersonFormModal from '../components/PersonFormModal';
 import MarriageFormModal from '../components/MarriageFormModal';
@@ -235,6 +236,7 @@ const getLayoutedElements = (nodes: any[], edges: any[], marriageMap: Map<string
 
 export default function TreePage() {
   const { user } = useAuthStore();
+  const { showAlert } = useDialogStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [loading, setLoading] = useState(true);
@@ -301,8 +303,8 @@ export default function TreePage() {
         pdf.save('silsilah-keluarga.pdf');
       }
     } catch (err) {
-      console.error('Failed to export tree', err);
-      alert('Gagal mengekspor silsilah. Coba lagi.');
+      console.error(err);
+      showAlert({ title: 'Gagal Ekspor', message: 'Gagal mengekspor silsilah. Coba lagi.', type: 'error' });
     } finally {
       setIsExporting(false);
     }

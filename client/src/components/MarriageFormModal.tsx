@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { useDialogStore } from '../store/dialogStore';
 
 interface MarriageFormModalProps {
   isOpen: boolean;
@@ -8,9 +9,11 @@ interface MarriageFormModalProps {
   persons: any[];
   initialHusbandId?: string;
   initialWifeId?: string;
+  editData?: any;
 }
 
-export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons, initialHusbandId, initialWifeId }: MarriageFormModalProps) {
+export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons, initialHusbandId, initialWifeId, editData }: MarriageFormModalProps) {
+  const { showAlert } = useDialogStore();
   const [loading, setLoading] = useState(false);
   const [husbandId, setHusbandId] = useState(initialHusbandId || '');
   const [wifeId, setWifeId] = useState(initialWifeId || '');
@@ -18,28 +21,41 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
 
   useEffect(() => {
     if (isOpen) {
-      setHusbandId(initialHusbandId || '');
-      setWifeId(initialWifeId || '');
-      setMarriageDate('');
+      if (editData) {
+        setHusbandId(editData.husbandId || '');
+        setWifeId(editData.wifeId || '');
+        setMarriageDate(editData.marriageDate || '');
+      } else {
+        setHusbandId(initialHusbandId || '');
+        setWifeId(initialWifeId || '');
+        setMarriageDate('');
+      }
     }
-  }, [isOpen, initialHusbandId, initialWifeId]);
+  }, [isOpen, initialHusbandId, initialWifeId, editData]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!husbandId && !wifeId) {
-      alert('Harap pilih minimal salah satu pasangan (Suami atau Istri)');
+      showAlert({ title: 'Peringatan', message: 'Harap pilih minimal salah satu pasangan (Suami atau Istri)', type: 'warning' });
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/marriages', { 
+      const payload = { 
         husbandId: husbandId || null, 
         wifeId: wifeId || null, 
         marriageDate: marriageDate || null 
-      });
+      };
+
+      if (editData) {
+        await api.put(`/marriages/${editData.id}`, payload);
+      } else {
+        await api.post('/marriages', payload);
+      }
+
       onSuccess();
       onClose();
       // Reset form
@@ -47,7 +63,7 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
       setWifeId('');
       setMarriageDate('');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal menyimpan data pernikahan');
+      showAlert({ title: 'Gagal', message: error.response?.data?.message || 'Gagal menyimpan data pernikahan', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -60,7 +76,7 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b border-border/50 flex justify-between items-center">
-          <h2 className="text-xl font-serif font-bold text-foreground">Tambah Pasangan</h2>
+          <h2 className="text-xl font-serif font-bold text-foreground">{editData ? 'Edit Pasangan' : 'Tambah Pasangan'}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             ✕
           </button>
