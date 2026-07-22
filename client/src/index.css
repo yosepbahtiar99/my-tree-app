@@ -8,7 +8,7 @@
   --color-background: #FAFAFA;
   --color-foreground: #18181B;
 
-  --color-primary: #92400e;
+  --color-primary: #16a34a;
   --color-primary-foreground: #FFFFFF;
 
   --color-secondary: #e7e5e4;
@@ -22,7 +22,7 @@
 
   --color-border: #e5e5e5;
   --color-input: #e5e5e5;
-  --color-ring: #92400e;
+  --color-ring: #16a34a;
 }
 
 @layer base {

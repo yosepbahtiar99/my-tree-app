@@ -13,6 +13,8 @@ export default function DashboardPage() {
   const [allPersons, setAllPersons] = useState<any[]>([]);
   const [allMarriages, setAllMarriages] = useState<any[]>([]);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMarriageModalOpen, setIsMarriageModalOpen] = useState(false);
@@ -47,14 +49,18 @@ export default function DashboardPage() {
 
   const fetchAllData = async () => {
     try {
-      const [personsRes, pendingRes, marriagesRes] = await Promise.all([
+      const [personsRes, pendingRes, marriagesRes, usersRes, logsRes] = await Promise.all([
         api.get('/persons'),
         user?.role === 'SUPER_ADMIN' ? api.get('/auth/pending-users') : Promise.resolve({ data: [] }),
         api.get('/marriages'),
+        user?.role === 'SUPER_ADMIN' ? api.get('/auth/users') : Promise.resolve({ data: [] }),
+        user?.role === 'SUPER_ADMIN' ? api.get('/audit') : Promise.resolve({ data: [] })
       ]);
       setAllPersons(personsRes.data);
       setPendingUsers(pendingRes.data);
       setAllMarriages(marriagesRes.data);
+      setAllUsers(usersRes.data);
+      setAuditLogs(logsRes.data);
     } catch (error) {
       console.error('Failed to fetch all data', error);
     } finally {
@@ -90,6 +96,24 @@ export default function DashboardPage() {
       fetchData(); // Refresh list
     } catch (error) {
       showAlert({ title: 'Gagal', message: 'Gagal menyetujui user', type: 'error' });
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: 'Hapus Pengguna?',
+      message: 'Yakin ingin menghapus pengguna ini? Akses mereka ke sistem akan dicabut.',
+      type: 'danger',
+      confirmText: 'Hapus'
+    });
+
+    if (confirmed) {
+      try {
+        await api.delete(`/auth/users/${id}`);
+        fetchData();
+      } catch (error: any) {
+        showAlert({ title: 'Gagal', message: error.response?.data?.message || 'Gagal menghapus pengguna', type: 'error' });
+      }
     }
   };
 
@@ -323,6 +347,90 @@ export default function DashboardPage() {
         </div>
       </div>
       
+      {user?.role === 'SUPER_ADMIN' && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
+          <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Manajemen Pengguna</h2>
+          <div className="border border-border/50 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="min-w-full divide-y divide-border/50">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Bergabung</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-border/50">
+                {allUsers.map((u) => (
+                  <tr key={u.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{u.role}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {u.isActive ? 'Aktif' : 'Menunggu'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {u.role !== 'SUPER_ADMIN' ? (
+                        <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 hover:text-red-800">Hapus</button>
+                      ) : (
+                        <span className="text-muted-foreground italic">Admin</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {user?.role === 'SUPER_ADMIN' && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
+          <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Log Aktivitas (Audit Trail)</h2>
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {auditLogs.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Belum ada aktivitas yang terekam.</p>
+            ) : (
+              auditLogs.map((log) => (
+                <div key={log.id} className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div className={`p-2 rounded-full ${
+                    log.action === 'CREATE' ? 'bg-green-100 text-green-600' :
+                    log.action === 'UPDATE' ? 'bg-blue-100 text-blue-600' :
+                    'bg-red-100 text-red-600'
+                  }`}>
+                    {log.action === 'CREATE' ? '➕' : log.action === 'UPDATE' ? '✏️' : '🗑️'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {log.Actor ? log.Actor.email : 'Unknown User'} 
+                      <span className="font-normal text-muted-foreground"> melakukan </span>
+                      <span className={`font-semibold ${
+                        log.action === 'CREATE' ? 'text-green-600' :
+                        log.action === 'UPDATE' ? 'text-blue-600' :
+                        'text-red-600'
+                      }`}>{log.action}</span>
+                      <span className="font-normal text-muted-foreground"> pada data </span>
+                      {log.TargetPerson ? log.TargetPerson.fullName : (log.details?.id ? `ID: ${log.details.id}` : 'Data')}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </p>
+                    {log.details && Object.keys(log.details).length > 0 && (
+                      <pre className="mt-2 text-xs bg-white p-2 rounded border border-border/50 overflow-x-auto text-slate-500">
+                        {JSON.stringify(log.details, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       <PersonFormModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

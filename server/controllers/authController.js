@@ -67,9 +67,38 @@ const approveUser = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({ 
+      attributes: ['id', 'email', 'role', 'isActive', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User tidak ditemukan' });
+
+    if (user.role === 'SUPER_ADMIN') {
+      return res.status(403).json({ message: 'Tidak dapat menghapus SUPER_ADMIN' });
+    }
+
+    await user.destroy();
+    res.json({ message: 'User berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error delete user', error: error.message });
+  }
+};
+
 const logout = (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logout berhasil' });
 };
 
-module.exports = { register, login, getPendingUsers, approveUser, logout };
+module.exports = { register, login, getPendingUsers, approveUser, logout, getAllUsers, deleteUser };

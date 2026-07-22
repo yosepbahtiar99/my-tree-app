@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { Home, LogIn, UserPlus, Shield } from 'lucide-react';
+import { Home, LogIn, UserPlus, TreePine } from 'lucide-react';
 import TreePage from './pages/TreePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -23,8 +23,8 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
-              <Shield size={20} />
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+              <TreePine size={20} />
             </div>
             <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-foreground">Silsilahku</Link>
           </div>

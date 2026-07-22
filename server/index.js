@@ -7,6 +7,7 @@ const db = require('./models');
 const authRoutes = require('./routes/authRoutes');
 const personRoutes = require('./routes/personRoutes');
 const marriageRoutes = require('./routes/marriageRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/persons', personRoutes);
 app.use('/api/marriages', marriageRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
