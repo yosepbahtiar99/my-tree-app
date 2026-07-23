@@ -256,59 +256,8 @@ export default function TreePage() {
   
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [focusedPersonId, setFocusedPersonId] = useState<string | null>(null);
-  
-  const [isExporting, setIsExporting] = useState(false);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-  const { getNodes } = useReactFlow();
 
-  const downloadTree = async (format: 'png' | 'pdf') => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      const currentNodes = getNodes();
-      if (currentNodes.length === 0) return;
 
-      const nodesBounds = getNodesBounds(currentNodes);
-      const width = nodesBounds.width + 200;
-      const height = nodesBounds.height + 200;
-      const viewport = getViewportForBounds(nodesBounds, width, height, 0.5, 2, 0);
-
-      const element = document.querySelector('.react-flow__viewport') as HTMLElement;
-      if (!element) return;
-
-      const dataUrl = await toPng(element, {
-        backgroundColor: '#ffffff',
-        width: width,
-        height: height,
-        style: {
-          width: `${width}px`,
-          height: `${height}px`,
-          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-        },
-      });
-
-      if (format === 'png') {
-        const a = document.createElement('a');
-        a.setAttribute('download', 'silsilah-keluarga.png');
-        a.setAttribute('href', dataUrl);
-        a.click();
-      } else {
-        const orientation = width > height ? 'l' : 'p';
-        const pdf = new jsPDF({
-          orientation,
-          unit: 'px',
-          format: [width, height]
-        });
-        pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
-        pdf.save('silsilah-keluarga.pdf');
-      }
-    } catch (err) {
-      console.error(err);
-      showAlert({ title: 'Gagal Ekspor', message: 'Gagal mengekspor silsilah. Coba lagi.', type: 'error' });
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   useEffect(() => {
     setNodes((nds) => 
@@ -613,32 +562,6 @@ export default function TreePage() {
         fitView
       >
         <Controls>
-          <div className="relative">
-            <ControlButton onClick={() => setShowDownloadMenu(!showDownloadMenu)} title="Download Silsilah" style={{ opacity: isExporting ? 0.5 : 1, minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-            </ControlButton>
-            {showDownloadMenu && (
-              <div className="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-[9999]">
-                <button 
-                  onClick={() => { setShowDownloadMenu(false); downloadTree('png'); }}
-                  className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
-                >
-                  <span>🖼️</span> Ekspor ke PNG
-                </button>
-                <div className="h-px bg-slate-100 my-1"></div>
-                <button 
-                  onClick={() => { setShowDownloadMenu(false); downloadTree('pdf'); }}
-                  className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
-                >
-                  <span>📄</span> Ekspor ke PDF
-                </button>
-              </div>
-            )}
-          </div>
           {focusedPersonId && (
             <ControlButton onClick={() => setFocusedPersonId(null)} title="Batal Fokus" style={{ color: '#ef4444', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '20px', height: '20px' }}>

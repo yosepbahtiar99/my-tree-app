@@ -43,7 +43,7 @@ export default function SearchBar({ persons, onHighlight }: SearchBarProps) {
   };
 
   return (
-    <Panel position="top-left" className="m-4">
+    <Panel position="top-left" className="m-4 nopan nowheel">
       <div className="relative w-64" ref={dropdownRef}>
         <div className="relative">
           <input
