@@ -249,7 +249,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
               {editData?.photoId && !photoFile && (
                 <div className="mb-4 flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <img 
-                    src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${editData.photoId}`} 
+                    src={`${import.meta.env.VITE_API_URL}/uploads/${editData.photoId}`} 
                     alt="Foto saat ini" 
                     className="w-16 h-16 rounded-full object-cover shadow-sm ring-2 ring-white"
                   />

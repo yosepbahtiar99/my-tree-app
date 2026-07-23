@@ -53,7 +53,7 @@ export default function PersonNodeV2({ data }: any) {
       <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border border-white shadow-inner bg-white flex items-center justify-center">
         {data.photoId ? (
           <img 
-            src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${data.photoId}`} 
+            src={`${import.meta.env.VITE_API_URL}/uploads/${data.photoId}`} 
             alt={data.fullName}
             className="w-full h-full object-cover"
           />

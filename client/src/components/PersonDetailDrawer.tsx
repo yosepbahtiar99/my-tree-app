@@ -55,7 +55,7 @@ export default function PersonDetailDrawer({
   if (!isOpen || !person) return null;
 
   const imageUrl = person.photoId 
-    ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${person.photoId}`
+    ? `${import.meta.env.VITE_API_URL}/uploads/${person.photoId}`
     : null;
 
   return (
