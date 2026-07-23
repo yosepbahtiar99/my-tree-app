@@ -4,17 +4,11 @@ import {
   MiniMap,
   Controls,
   ControlButton,
-  // Background,
   useNodesState,
   useEdgesState,
-  useReactFlow,
-  getNodesBounds,
-  getViewportForBounds,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
-import { toPng } from 'html-to-image';
-import jsPDF from 'jspdf';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { useDialogStore } from '../store/dialogStore';
