@@ -259,7 +259,6 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
               <input 
                 type="file" 
                 accept="image/*" 
-                capture="user" 
                 ref={fileInputRef} 
                 onChange={handlePhotoChange} 
                 className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
