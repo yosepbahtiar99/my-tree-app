@@ -161,8 +161,12 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
 
       onSuccess();
       onClose();
-    } catch (error) {
-      showAlert({ title: 'Gagal', message: 'Gagal menyimpan data anggota keluarga.', type: 'error' });
+    } catch (error: any) {
+      if (error.response?.status === 413) {
+        showAlert({ title: 'Gagal', message: 'Ukuran file terlalu besar. Silakan pilih foto dengan ukuran lebih kecil.', type: 'error' });
+      } else {
+        showAlert({ title: 'Gagal', message: 'Gagal menyimpan data anggota keluarga.', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
