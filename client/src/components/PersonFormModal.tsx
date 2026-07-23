@@ -4,6 +4,7 @@ import { useDialogStore } from '../store/dialogStore';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import type { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface PersonFormModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
   const [imgSrc, setImgSrc] = useState('');
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+
   const imgRef = useRef<HTMLImageElement>(null);
   const [showCropper, setShowCropper] = useState(false);
 
@@ -241,18 +243,35 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
               </div>
             )}
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-1">Foto Wajah (Pilih File)</label>
+            <div className="md:col-span-2 pt-2 border-t border-border/50">
+              <label className="block text-sm font-medium text-foreground mb-3">Foto Wajah</label>
               
               {editData?.photoId && !photoFile && (
-                <div className="mb-3">
-                  <p className="text-xs text-muted-foreground mb-1">Foto Saat Ini:</p>
+                <div className="mb-4 flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <img 
                     src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${editData.photoId}`} 
                     alt="Foto saat ini" 
-                    className="w-24 h-24 rounded-lg object-cover border border-border/50"
+                    className="w-16 h-16 rounded-full object-cover shadow-sm ring-2 ring-white"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Pilih file baru jika ingin mengganti foto.</p>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">Foto Saat Ini</p>
+                    <p className="text-xs text-muted-foreground">Pilih foto baru di bawah jika ingin mengganti.</p>
+                  </div>
+                </div>
+              )}
+
+              {!showCropper && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex flex-col items-center justify-center p-6 bg-blue-50/50 text-blue-600 rounded-2xl hover:bg-blue-50 transition-colors border border-blue-100/50 group border-dashed"
+                  >
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm text-blue-500 group-hover:scale-110 transition-transform">
+                      <ImageIcon size={24} />
+                    </div>
+                    <span className="font-medium text-sm">Pilih Foto dari Galeri/File</span>
+                  </button>
                 </div>
               )}
 
@@ -261,9 +280,13 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
                 accept="image/*" 
                 ref={fileInputRef} 
                 onChange={handlePhotoChange} 
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                className="hidden"
               />
-              {photoFile && !showCropper && <p className="text-xs text-green-600 mt-1">File terpilih: {photoFile.name}</p>}
+              {photoFile && !showCropper && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-green-600 font-medium bg-green-50 p-2 rounded-md">
+                  <span>✅ File terpilih: {photoFile.name}</span>
+                </div>
+              )}
               
               {showCropper && imgSrc && (
                 <div className="mt-4 border border-border p-3 bg-slate-50 rounded-lg shadow-sm">
