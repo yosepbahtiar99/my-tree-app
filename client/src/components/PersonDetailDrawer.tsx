@@ -68,10 +68,10 @@ export default function PersonDetailDrawer({
       
       {/* Drawer */}
       <div 
-        className={`fixed inset-y-0 right-0 z-50 w-full md:w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 bottom-0 left-0 w-screen sm:left-auto sm:right-0 sm:w-[400px] z-50 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/50 bg-slate-50">
+        <div className="flex items-center justify-between p-4 border-b border-border/50 bg-slate-50 shrink-0">
           <h2 className="font-serif font-bold text-lg text-foreground truncate pr-4">Detail Profil</h2>
           <button 
             onClick={onClose} 
@@ -82,8 +82,8 @@ export default function PersonDetailDrawer({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Square Photo */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          {/* Photo */}
           <div className="w-full aspect-square bg-slate-100 relative shrink-0">
             {imageUrl ? (
               <img src={imageUrl} alt={person.fullName} className="w-full h-full object-cover" />

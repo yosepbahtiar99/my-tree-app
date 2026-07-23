@@ -206,8 +206,8 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-serif font-bold text-amber-900 mb-4">Persetujuan Editor Baru</h2>
           <div className="space-y-4">
             {pendingUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
-                <div>
+              <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow-sm">
+                <div className="break-all">
                   <p className="font-medium text-foreground">{u.email}</p>
                   <p className="text-sm text-muted-foreground">Mendaftar pada: {new Date(u.createdAt).toLocaleDateString()}</p>
                 </div>
@@ -224,9 +224,9 @@ export default function DashboardPage() {
       )}
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Anggota Keluarga</h2>
-          <button onClick={handleAddClick} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+          <button onClick={handleAddClick} className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
             + Tambah Anggota
           </button>
         </div>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
           </table>
         </div>
 
-        <div className="flex justify-between items-center mt-4 px-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-2">
           <button 
             disabled={personsPage <= 1} 
             onClick={() => setPersonsPage(p => p - 1)}
@@ -287,9 +287,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Pasangan (Pernikahan)</h2>
-          <button onClick={() => { setEditMarriageData(null); setIsMarriageModalOpen(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
+          <button onClick={() => { setEditMarriageData(null); setIsMarriageModalOpen(true); }} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
             + Tambah Pasangan
           </button>
         </div>
@@ -326,7 +326,7 @@ export default function DashboardPage() {
           </table>
         </div>
 
-        <div className="flex justify-between items-center mt-4 px-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-2">
           <button 
             disabled={marriagesPage <= 1} 
             onClick={() => setMarriagesPage(p => p - 1)}
