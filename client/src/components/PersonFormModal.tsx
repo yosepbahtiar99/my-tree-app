@@ -162,7 +162,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
       onSuccess();
       onClose();
     } catch (error: any) {
-      if (error.response?.status === 413) {
+      if (error.response?.status === 413 || error?.message?.includes('413') || error?.message === 'Network Error' || error?.code === 'ERR_NETWORK') {
         showAlert({ title: 'Gagal', message: 'Ukuran file terlalu besar. Silakan pilih foto dengan ukuran lebih kecil.', type: 'error' });
       } else {
         showAlert({ title: 'Gagal', message: 'Gagal menyimpan data anggota keluarga.', type: 'error' });
