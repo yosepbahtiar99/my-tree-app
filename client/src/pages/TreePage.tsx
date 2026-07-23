@@ -614,25 +614,25 @@ export default function TreePage() {
       >
         <Controls>
           <div className="relative">
-            <ControlButton onClick={() => setShowDownloadMenu(!showDownloadMenu)} title="Download Silsilah" style={{ opacity: isExporting ? 0.5 : 1 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+            <ControlButton onClick={() => setShowDownloadMenu(!showDownloadMenu)} title="Download Silsilah" style={{ opacity: isExporting ? 0.5 : 1, minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
             </ControlButton>
             {showDownloadMenu && (
-              <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-[9999]">
+              <div className="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-[9999]">
                 <button 
                   onClick={() => { setShowDownloadMenu(false); downloadTree('png'); }}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
                   <span>🖼️</span> Ekspor ke PNG
                 </button>
                 <div className="h-px bg-slate-100 my-1"></div>
                 <button 
                   onClick={() => { setShowDownloadMenu(false); downloadTree('pdf'); }}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
                   <span>📄</span> Ekspor ke PDF
                 </button>
@@ -640,14 +640,14 @@ export default function TreePage() {
             )}
           </div>
           {focusedPersonId && (
-            <ControlButton onClick={() => setFocusedPersonId(null)} title="Batal Fokus" style={{ color: '#ef4444' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+            <ControlButton onClick={() => setFocusedPersonId(null)} title="Batal Fokus" style={{ color: '#ef4444', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '20px', height: '20px' }}>
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </ControlButton>
           )}
-          <ControlButton onClick={fetchTree} title="Refresh Silsilah">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px', margin: '0 auto' }}>
+          <ControlButton onClick={fetchTree} title="Refresh Silsilah" style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '20px', height: '20px' }}>
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
             </svg>
           </ControlButton>

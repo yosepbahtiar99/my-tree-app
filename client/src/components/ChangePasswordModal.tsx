@@ -46,8 +46,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[100vw] sm:max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center p-6 border-b border-border/50 bg-muted/30">
           <h2 className="text-xl font-serif font-bold text-foreground flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-primary" />
@@ -68,7 +68,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 required
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                className="w-full pl-10 pr-4 py-3 min-h-[44px] bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                 placeholder="Masukkan password lama"
               />
             </div>
@@ -83,7 +83,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                className="w-full pl-10 pr-4 py-3 min-h-[44px] bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                 placeholder="Minimal 6 karakter"
               />
             </div>
@@ -98,7 +98,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                className="w-full pl-10 pr-4 py-3 min-h-[44px] bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                 placeholder="Ketik ulang password baru"
               />
             </div>
@@ -108,14 +108,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+              className="px-6 py-3 min-h-[44px] text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md transition-colors disabled:opacity-50"
+              className="px-6 py-3 min-h-[44px] text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md transition-colors disabled:opacity-50"
             >
               {loading ? 'Menyimpan...' : 'Simpan'}
             </button>

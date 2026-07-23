@@ -213,7 +213,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={() => handleApprove(u.id)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
+                  className="px-4 py-3 min-h-[44px] bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
                 >
                   Setujui
                 </button>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
       <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Anggota Keluarga</h2>
-          <button onClick={handleAddClick} className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+          <button onClick={handleAddClick} className="w-full sm:w-auto px-4 py-3 min-h-[44px] bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
             + Tambah Anggota
           </button>
         </div>
@@ -255,9 +255,9 @@ export default function DashboardPage() {
                     {p.birthDate || '?'} - {p.isDeceased ? (p.deathDate || '?') : 'Sekarang'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{p.age ?? '?'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-3">
-                    <button onClick={() => handleEditClick(p)} className="text-blue-600 hover:text-blue-800">Edit</button>
-                    <button onClick={() => handleDeletePerson(p.id)} className="text-red-600 hover:text-red-800">Hapus</button>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                    <button onClick={() => handleEditClick(p)} className="px-3 py-2 min-h-[44px] bg-slate-100 text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-md transition-colors flex items-center justify-center">Edit</button>
+                    <button onClick={() => handleDeletePerson(p.id)} className="px-3 py-2 min-h-[44px] bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-800 rounded-md transition-colors flex items-center justify-center">Hapus</button>
                   </td>
                 </tr>
               ))}
@@ -269,7 +269,7 @@ export default function DashboardPage() {
           <button 
             disabled={personsPage <= 1} 
             onClick={() => setPersonsPage(p => p - 1)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+            className="px-4 py-3 min-h-[44px] w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
           >
             Sebelumnya
           </button>
@@ -279,7 +279,7 @@ export default function DashboardPage() {
           <button 
             disabled={personsPage >= personsTotalPages} 
             onClick={() => setPersonsPage(p => p + 1)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+            className="px-4 py-3 min-h-[44px] w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
           >
             Selanjutnya
           </button>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
       <div className="bg-white p-6 rounded-xl shadow-sm border border-border/50 mt-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-2xl font-serif font-bold text-foreground">Daftar Pasangan (Pernikahan)</h2>
-          <button onClick={() => { setEditMarriageData(null); setIsMarriageModalOpen(true); }} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
+          <button onClick={() => { setEditMarriageData(null); setIsMarriageModalOpen(true); }} className="w-full sm:w-auto px-4 py-3 min-h-[44px] bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors">
             + Tambah Pasangan
           </button>
         </div>
@@ -316,9 +316,9 @@ export default function DashboardPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Husband ? m.Husband.fullName : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{m.Wife ? m.Wife.fullName : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{m.marriageDate || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-3">
-                    <button onClick={() => handleEditMarriageClick(m)} className="text-blue-600 hover:text-blue-800">Edit</button>
-                    <button onClick={() => handleDeleteMarriage(m.id)} className="text-red-600 hover:text-red-800">Hapus</button>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                    <button onClick={() => handleEditMarriageClick(m)} className="px-3 py-2 min-h-[44px] bg-slate-100 text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-md transition-colors flex items-center justify-center">Edit</button>
+                    <button onClick={() => handleDeleteMarriage(m.id)} className="px-3 py-2 min-h-[44px] bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-800 rounded-md transition-colors flex items-center justify-center">Hapus</button>
                   </td>
                 </tr>
               ))}
@@ -330,7 +330,7 @@ export default function DashboardPage() {
           <button 
             disabled={marriagesPage <= 1} 
             onClick={() => setMarriagesPage(p => p - 1)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+            className="px-4 py-3 min-h-[44px] w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
           >
             Sebelumnya
           </button>
@@ -340,7 +340,7 @@ export default function DashboardPage() {
           <button 
             disabled={marriagesPage >= marriagesTotalPages} 
             onClick={() => setMarriagesPage(p => p + 1)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+            className="px-4 py-3 min-h-[44px] w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
           >
             Selanjutnya
           </button>
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {u.role !== 'SUPER_ADMIN' ? (
-                        <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 hover:text-red-800">Hapus</button>
+                        <button onClick={() => handleDeleteUser(u.id)} className="px-3 py-2 min-h-[44px] bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-800 rounded-md transition-colors flex items-center justify-center">Hapus</button>
                       ) : (
                         <span className="text-muted-foreground italic">Admin</span>
                       )}

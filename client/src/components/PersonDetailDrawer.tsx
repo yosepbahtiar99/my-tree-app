@@ -68,7 +68,7 @@ export default function PersonDetailDrawer({
       
       {/* Drawer */}
       <div 
-        className={`fixed top-0 bottom-0 left-0 w-screen sm:left-auto sm:right-0 sm:w-[400px] z-50 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 bottom-0 left-0 w-full max-w-[100vw] sm:left-auto sm:right-0 sm:w-[400px] z-50 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border/50 bg-slate-50 shrink-0">
@@ -106,7 +106,7 @@ export default function PersonDetailDrawer({
               {onAction && (
                 <button 
                   onClick={() => onAction('FOCUS_FAMILY', person)}
-                  className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors shrink-0 mt-1"
+                  className="px-4 py-3 min-h-[44px] text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors shrink-0 mt-1 flex items-center justify-center"
                 >
                   🎯 Fokus
                 </button>
@@ -203,19 +203,19 @@ export default function PersonDetailDrawer({
           <div className="p-4 border-t border-border/50 bg-slate-50 grid grid-cols-2 gap-2">
             <button 
               onClick={() => onAction('EDIT', person)}
-              className="px-3 py-2 text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm"
+              className="px-4 py-3 min-h-[44px] text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm flex items-center justify-center gap-1"
             >
               ✏️ Edit Profil
             </button>
             <button 
               onClick={() => onAction('ADD_SPOUSE', person)}
-              className="px-3 py-2 text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm"
+              className="px-4 py-3 min-h-[44px] text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm flex items-center justify-center gap-1"
             >
               💍 Tambah Pasangan
             </button>
             <button 
               onClick={() => onAction('ADD_CHILD', person)}
-              className="px-3 py-2 text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm col-span-2"
+              className="px-4 py-3 min-h-[44px] text-sm font-medium border border-slate-200 bg-white rounded-md hover:bg-slate-50 text-slate-700 shadow-sm col-span-2 flex items-center justify-center gap-1"
             >
               👶 Tambah Anak
             </button>

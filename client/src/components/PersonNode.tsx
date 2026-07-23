@@ -84,40 +84,40 @@ export default function PersonNode({ data }: any) {
 
       {/* Tombol Tambah & Dropdown Menu (Hanya Tampil Jika Login) */}
       {data.user && (
-        <div className="absolute -bottom-3" ref={menuRef}>
+        <div className="absolute -bottom-5" ref={menuRef}>
           <button 
             onClick={handleToggleMenu}
-            className="bg-white border border-slate-200 rounded-full w-6 h-6 flex items-center justify-center shadow-sm cursor-pointer hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors"
+            className="bg-white border border-slate-200 rounded-full w-11 h-11 flex items-center justify-center shadow-sm cursor-pointer hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
           </button>
 
           {showMenu && (
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl border border-slate-100 py-1 w-40 z-[99999] overflow-hidden">
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl border border-slate-100 py-1 w-52 z-[99999] overflow-hidden">
               <button 
                 onClick={(e) => handleAction(e, 'ADD_PARENT')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors flex items-center gap-2"
               >
                 <span>👴</span> Tambah Orang Tua
               </button>
               <button 
                 onClick={(e) => handleAction(e, 'ADD_CHILD')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
               >
                 <span>👶</span> Tambah Anak
               </button>
               <button 
                 onClick={(e) => handleAction(e, 'ADD_SPOUSE')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition-colors flex items-center gap-2"
               >
                 <span>❤️</span> Tambah Pasangan
               </button>
               <div className="h-px bg-slate-100 my-1"></div>
               <button 
                 onClick={(e) => handleAction(e, 'EDIT_PROFILE')}
-                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
               >
                 <span>✏️</span> Edit Profil
               </button>

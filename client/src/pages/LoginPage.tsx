@@ -28,7 +28,7 @@ export default function LoginPage() {
   };
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-sm border border-border/50">
+      <div className="max-w-md w-full space-y-8 bg-white p-6 sm:p-10 rounded-xl shadow-sm border border-border/50">
         <div>
           <h2 className="mt-2 text-center text-3xl font-serif font-bold text-foreground">
             Selamat Datang Kembali
@@ -52,7 +52,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white"
+                className="appearance-none relative block w-full px-4 py-3 border border-input rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white min-h-[44px]"
                 placeholder="Email anda"
               />
             </div>
@@ -64,7 +64,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white"
+                className="appearance-none relative block w-full px-4 py-3 border border-input rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white min-h-[44px]"
                 placeholder="Password"
               />
             </div>
@@ -74,7 +74,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-sm disabled:opacity-50"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-sm disabled:opacity-50 min-h-[44px]"
             >
               {loading ? 'Memproses...' : 'Masuk'}
             </button>

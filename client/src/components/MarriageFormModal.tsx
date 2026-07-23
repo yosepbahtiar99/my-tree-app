@@ -73,8 +73,8 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
   const females = persons.filter(p => p.gender === 'FEMALE');
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b border-border/50 flex justify-between items-center">
           <h2 className="text-xl font-serif font-bold text-foreground">{editData ? 'Edit Pasangan' : 'Tambah Pasangan'}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -82,14 +82,14 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Pilih Suami</label>
               <select 
                 value={husbandId} 
                 onChange={(e) => setHusbandId(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-3 min-h-[44px] border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white"
               >
                 <option value="">-- Pilih Laki-laki --</option>
                 {males.map(p => (
@@ -103,7 +103,7 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
               <select 
                 value={wifeId} 
                 onChange={(e) => setWifeId(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-3 min-h-[44px] border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white"
               >
                 <option value="">-- Pilih Perempuan --</option>
                 {females.map(p => (
@@ -118,23 +118,23 @@ export default function MarriageFormModal({ isOpen, onClose, onSuccess, persons,
                 type="date" 
                 value={marriageDate} 
                 onChange={(e) => setMarriageDate(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-3 min-h-[44px] border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end gap-3">
+          <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-border/50">
             <button 
               type="button" 
               onClick={onClose}
-              className="px-4 py-2 border border-input text-foreground rounded-md text-sm font-medium hover:bg-muted transition-colors"
+              className="px-6 py-3 min-h-[44px] border border-input text-foreground rounded-md text-sm font-medium hover:bg-muted transition-colors"
             >
               Batal
             </button>
             <button 
               type="submit" 
               disabled={loading}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="px-6 py-3 min-h-[44px] bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {loading ? 'Menyimpan...' : 'Simpan Pasangan'}
             </button>

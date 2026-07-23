@@ -176,8 +176,8 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
   const females = persons.filter(p => p.gender === 'FEMALE' && p.id !== editData?.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-[100vw] sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         <div className="px-6 py-4 border-b border-border/50 flex justify-between items-center bg-muted/30">
           <h2 className="text-xl font-serif font-bold text-foreground">
             {addingParentForId ? 'Tambah Orang Tua' : (editData ? 'Edit Data Anggota' : 'Tambah Anggota Keluarga')}
@@ -191,18 +191,18 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Nama Lengkap *</label>
-              <input required name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" />
+              <input required name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-3 min-h-[44px] border rounded-md" />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Jenis Kelamin</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
+              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-3 min-h-[44px] border rounded-md bg-white">
                 <option value="MALE">Laki-Laki</option>
                 <option value="FEMALE">Perempuan</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Tanggal Lahir</label>
-              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" />
+              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full px-4 py-3 min-h-[44px] border rounded-md" />
             </div>
             <div className="flex items-center mt-6">
               <input type="checkbox" name="isDeceased" checked={formData.isDeceased} onChange={handleChange} className="w-4 h-4 mr-2" />
@@ -211,7 +211,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
             {formData.isDeceased && (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Tanggal Wafat</label>
-                <input type="date" name="deathDate" value={formData.deathDate} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" />
+                <input type="date" name="deathDate" value={formData.deathDate} onChange={handleChange} className="w-full px-4 py-3 min-h-[44px] border rounded-md" />
               </div>
             )}
             
@@ -222,7 +222,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
                   <select 
                     value={formData.fatherId} 
                     onChange={(e) => setFormData({...formData, fatherId: e.target.value})}
-                    className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-3 min-h-[44px] border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white"
                   >
                     <option value="">-- Tidak Diketahui --</option>
                     {males.map(p => (
@@ -236,7 +236,7 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
                   <select 
                     value={formData.motherId} 
                     onChange={(e) => setFormData({...formData, motherId: e.target.value})}
-                    className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-3 min-h-[44px] border border-input rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white"
                   >
                     <option value="">-- Tidak Diketahui --</option>
                     {females.map(p => (
@@ -319,8 +319,8 @@ export default function PersonFormModal({ isOpen, onClose, onSuccess, persons, e
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground hover:bg-muted">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50">
+            <button type="button" onClick={onClose} className="px-6 py-3 min-h-[44px] border rounded-md text-foreground hover:bg-muted font-medium">Batal</button>
+            <button type="submit" disabled={loading} className="px-6 py-3 min-h-[44px] bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 font-medium">
               {loading ? 'Menyimpan...' : 'Simpan'}
             </button>
           </div>
